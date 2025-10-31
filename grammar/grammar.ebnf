@@ -1,0 +1,22 @@
+PROGRAM		::= {STATEMENT}
+STATEMENT	::= VAR_DECL | ASSIGN | PRINT | IF_STMT | LOOP_STMT | EXPR
+
+
+VAR_DECL	::= "new" IDENT ":=" EXPR
+ASSIGN 		::= IDENT ":=" EXPR
+PRINT 		::= "print" "(" EXPR ")"
+
+IF_STMT		::= "if" "(" EXPR ")" {STATEMENT} "fi" ["else"{STATEMENT} "fi"]
+
+LOOP_STMT   ::= FOR_LOOP | RANGE_LOOP
+RANGE_LOOP  ::= "loop" "(" IDENT "->" IDENT ")" {STATEMENT} "done"
+FOR_LOOP    ::= "loop" "(" [VAR_DECL | IDENT] ";" EXPR ";" ASSIGN ")" {STATEMENT} "done"
+
+
+
+EXPR		::= TERM { ("+" | "-" | "/" | "*") TERM }
+TERM		::= NUMBER | IDENT | "(" EXPR ")"
+
+IDENT 		::= [a-zA-Z_][a-zA-Z0-9_]*
+NUMBER  	::= [0-9]+
+STRING      ::= "\"" [^"]* "\""
