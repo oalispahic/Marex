@@ -1,6 +1,7 @@
 #include "lexer.hpp"
 #include <iostream>
-
+#include <fstream>
+#include <iterator>
 
 int main() {
 
@@ -10,20 +11,10 @@ int main() {
                            "ident", "number", "string", "end_of_file", "err"
     };
 
-    std::string test = R"(
-new test_var := 5
-new another_var := 10
-if (test_var < another_var)
-    print("Hey this works!")
-fi
-print("Hello World")
-new a := 5
-loop(a -> another_var)
-    print("This should print 4 times")
-done
-)";
-    auto out = tokenize(test);
+    std::ifstream programFile("../lang_idea/example.md");
+    std::string program((std::istreambuf_iterator<char>(programFile)), std::istreambuf_iterator<char>());
 
+    auto out = tokenize(program);
     for (int i = 0; i < out.size(); i++) std::cout << words[int(out[i].type)] << ": " << out[i].val << '\n';
 
     return 0;
