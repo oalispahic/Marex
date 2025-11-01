@@ -7,7 +7,7 @@
 #define MAREX_LEXER_HPP
 
 enum class TokenType{
-    NEW,
+    NEW = 0,
     PRINT,
     IF,
     ELSE,
