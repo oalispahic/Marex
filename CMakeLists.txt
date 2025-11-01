@@ -7,5 +7,6 @@ include_directories(.)
 include_directories(Lexer)
 
 add_executable(Marex
+        Lexer/token_.hpp
         Lexer/lexer.hpp
-        Lexer/token.hpp)
+        Lexer/lexer.cpp)
