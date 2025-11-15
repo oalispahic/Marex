@@ -10,6 +10,6 @@ add_executable(Marex
         Lexer/token_.hpp
         Lexer/lexer.hpp
         Lexer/lexer.cpp
-        ast/ast.hpp
-        ast/ast.hpp)
+        ast/ast_nodes.hpp
+        ast/ast_nodes.hpp)
 
