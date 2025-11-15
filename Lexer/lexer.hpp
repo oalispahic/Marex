@@ -69,7 +69,6 @@ std::vector<Token> tokenize(std::string &source) {
         }
 
 
-
         if ((c == ':' && source[i + 1] == '=') || (c == '-' && source[i + 1] == '>')) {
             std::string spec;
             spec += c;
@@ -132,3 +131,5 @@ std::vector<Token> tokenize(std::string &source) {
 
 
 #endif //MAREX_TOKEN_HPP
+
+

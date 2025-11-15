@@ -11,7 +11,7 @@ fi
 
 print("Hello World")
 
-new a = 5
+new a := 5
 
 loop(a -> another_var) 
     print("This should print 4 times")

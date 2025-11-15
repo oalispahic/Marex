@@ -15,7 +15,7 @@ int main() {
     std::string program((std::istreambuf_iterator<char>(programFile)), std::istreambuf_iterator<char>());
 
     auto out = tokenize(program);
-    for (int i = 0; i < out.size(); i++) std::cout << words[int(out[i].type)] << ": " << out[i].val << '\n';
+    for (auto & i : out) std::cout << words[int(i.type)] << ": " << i.val << '\n';
 
     return 0;
 }
