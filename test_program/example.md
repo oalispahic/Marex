@@ -1,6 +1,5 @@
 
-
-new last_pass := 
+new last_pass := 1
 
 loop(new i := 0; i<5; i := i+1)
     loop(new j := 0; j<5; j:=j+1)
