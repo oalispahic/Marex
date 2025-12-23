@@ -45,6 +45,7 @@ loop(new i := 0; i<5; i := i+1)
 
 done
 i := "Test"
+print(i)
 ```
 Output:
 ```
@@ -83,7 +84,7 @@ The language follows an interpreter pipeline:
 
 * The lexer turns the raw soruce file into an array of Tokens
 * The parser is an LL1 parser that constructs an Abstract Syntax Tree (AST)
-* Interpreter walks the AST and executed directly
+* Interpreter walks the AST and executes directly
 
 ---
 
@@ -109,7 +110,7 @@ in the root of your directory. You will get a marex compile.
 
 Then you can write a program or try the example.md in the test_program directory.
 
-Run by doing ./marex example.md 
+Run by doing ./marex "test_program/example.md" 
 
 Marex also supports a REPL mode which you get by running marex with no args like
 ./marex
