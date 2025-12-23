@@ -77,6 +77,7 @@ int main(int argc, char** argv){
 
     compile_and_run(source);
     source.clear();
+    std::cout<<'\n';
 
     return 0;
 }
