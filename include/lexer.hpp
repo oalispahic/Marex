@@ -3,7 +3,9 @@
 //
 #include <iostream>
 #include <string>
+#include <vector>
 #include "token_.hpp"
+
 
 #ifndef MAREX_TOKEN_HPP
 #define MAREX_TOKEN_HPP
