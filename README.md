@@ -97,5 +97,19 @@ The language is defined using EBNF and can be used with bison
 
 Syntax errors are handled during parsing and runtime errors are reported during execution
 
+---
 
+### Compile and try
 
+If you would like to try to compile the project, clone this repo and if you have g++ installed run 
+```
+g++ -std=c++20 src/*.cpp -Iinclude -o marex
+```
+in the root of your directory. You will get a marex compile.
+
+Then you can write a program or try the example.md in the test_program directory.
+
+Run by doing ./marex example.md 
+
+Marex also supports a REPL mode which you get by running marex with no args like
+./marex
