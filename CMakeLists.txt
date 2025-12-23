@@ -15,5 +15,6 @@ add_executable(Marex
         parser/parser.hpp
         parser/parser.cpp
         interpreter/interpreter.hpp
-        interpreter/interpreter.cpp)
+        interpreter/interpreter.cpp
+        src/testing.cpp)
 
