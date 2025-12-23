@@ -12,10 +12,12 @@ std::vector<Token> tokenize(std::string &source) {
     std::vector<Token> tokens;
 
     int i = 0;
+    int line = 0;
     while (i < source.size()) {
         char c = source[i];
         if (isspace(c)) {
             i++;
+            if(c=='\n') line++;
             continue;
         }
 
@@ -34,9 +36,9 @@ std::vector<Token> tokenize(std::string &source) {
             }
 
             if (!closed)
-                tokens.push_back({TokenType::ERR, "Unterminated string"});
+                tokens.push_back({TokenType::ERR, "Unterminated string",line});
             else
-                tokens.push_back({TokenType::STRING, str});
+                tokens.push_back({TokenType::STRING, str,line});
             continue;
         }
 
@@ -46,14 +48,15 @@ std::vector<Token> tokenize(std::string &source) {
                 val += source[i++];
             }
 
-            if (val == "new") tokens.push_back({TokenType::NEW, val});
-            else if (val == "if") tokens.push_back({TokenType::IF, val});
-            else if (val == "fi") tokens.push_back({TokenType::FI, val});
-            else if (val == "else") tokens.push_back({TokenType::ELSE, val});
-            else if (val == "loop") tokens.push_back({TokenType::LOOP, val});
-            else if (val == "done") tokens.push_back({TokenType::DONE, val});
-            else if (val == "print") tokens.push_back({TokenType::PRINT, val});
-            else tokens.push_back({TokenType::IDENT, val});
+            if (val == "new") tokens.push_back({TokenType::NEW, val,line});
+            else if (val == "if") tokens.push_back({TokenType::IF, val,line});
+            else if (val == "fi") tokens.push_back({TokenType::FI, val,line});
+            else if (val == "else") tokens.push_back({TokenType::ELSE, val,line});
+            else if (val == "loop") tokens.push_back({TokenType::LOOP, val,line});
+            else if (val == "done") tokens.push_back({TokenType::DONE, val,line});
+            else if (val == "print") tokens.push_back({TokenType::PRINT, val,line});
+            else if(val == "newln") tokens.push_back({TokenType::NEWLN, "\n",line});
+            else tokens.push_back({TokenType::IDENT, val,line});
 
             continue;
         }
@@ -64,67 +67,70 @@ std::vector<Token> tokenize(std::string &source) {
                 num += source[i];
                 i++;
             }
-            tokens.push_back({TokenType::NUMBER, num});
+            tokens.push_back({TokenType::NUMBER, num,line});
             continue;
         }
 
 
-        if ((c == ':' && source[i + 1] == '=') || (c == '-' && source[i + 1] == '>')) {
+        if ((c == ':' && source[i + 1] == '=') || (c == '-' && source[i + 1] == '>') || (c=='!' && source[i+1 == '='])) {
             std::string spec;
             spec += c;
             spec += source[i + 1];
-            if (spec == ":=") tokens.push_back({TokenType::ASSIGN, spec});
-            if (spec == "->") tokens.push_back({TokenType::ARROW, spec});
+            if (spec == ":=") tokens.push_back({TokenType::ASSIGN, spec,line});
+            if (spec == "->") tokens.push_back({TokenType::ARROW, spec,line});
+            if (spec == "!=") tokens.push_back({TokenType::NOT_EQ, spec,line});
             i += 2;
             continue;
         }
 
+
+
         switch (c) {
             case '+' :
-                tokens.push_back({TokenType::PLUS, "+"});
+                tokens.push_back({TokenType::PLUS, "+",line});
                 break;
             case '-' :
-                tokens.push_back({TokenType::MINUS, "-"});
+                tokens.push_back({TokenType::MINUS, "-",line});
                 break;
             case '*' :
-                tokens.push_back({TokenType::MULTIPLY, "*"});
+                tokens.push_back({TokenType::MULTIPLY, "*",line});
                 break;
             case '/' :
-                tokens.push_back({TokenType::DIVISION, "/"});
+                tokens.push_back({TokenType::DIVISION, "/",line});
                 break;
             case '<' :
-                tokens.push_back({TokenType::LESS, "<"});
+                tokens.push_back({TokenType::LESS, "<",line});
                 break;
             case '>' :
-                tokens.push_back({TokenType::GREATER, ">"});
+                tokens.push_back({TokenType::GREATER, ">",line});
                 break;
             case '=' :
-                tokens.push_back({TokenType::EQUAL, "="});
+                tokens.push_back({TokenType::EQUAL, "=",line});
                 break;
             case '&' :
-                tokens.push_back({TokenType::AND, "&"});
+                tokens.push_back({TokenType::AND, "&",line});
                 break;
             case '|' :
-                tokens.push_back({TokenType::OR, "|"});
+                tokens.push_back({TokenType::OR, "|",line});
                 break;
             case '(' :
-                tokens.push_back({TokenType::L_PAR, "("});
+                tokens.push_back({TokenType::L_PAR, "(",line});
                 break;
             case ')' :
-                tokens.push_back({TokenType::R_PAR, ")"});
+                tokens.push_back({TokenType::R_PAR, ")",line});
                 break;
             case ';' :
-                tokens.push_back({TokenType::SEMICOLON, ";"});
+                tokens.push_back({TokenType::SEMICOLON, ";",line});
                 break;
             default:
-                tokens.push_back({TokenType::ERR, std::string(1, c)});
+                tokens.push_back({TokenType::ERR, std::string(1, c),line});
                 break;
 
         }
         i++;
     }
 
-    tokens.push_back({TokenType::END_OF_FILE, ""});
+    tokens.push_back({TokenType::END_OF_FILE, "",line});
     return tokens;
 
 }

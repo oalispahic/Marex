@@ -11,5 +11,9 @@ add_executable(Marex
         Lexer/lexer.hpp
         Lexer/lexer.cpp
         ast/ast_nodes.hpp
-        ast/ast_nodes.hpp)
+        ast/ast_nodes.hpp
+        parser/parser.hpp
+        parser/parser.cpp
+        interpreter/interpreter.hpp
+        interpreter/interpreter.cpp)
 

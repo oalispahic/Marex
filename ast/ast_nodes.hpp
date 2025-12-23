@@ -25,17 +25,17 @@ struct NumExpr : Expr {
 struct StringExpr : Expr {
     std::string string_val;
 
-    explicit StringExpr(std::string &string_val) : string_val(string_val) {}
+    explicit StringExpr(const std::string &string_val) : string_val(string_val) {}
 };
 
 struct IdentExpr : Expr {
     std::string ident_val;
 
-    explicit IdentExpr(std::string &ident_val) : ident_val(ident_val) {}
+     IdentExpr(const std::string &ident_val) : ident_val(ident_val) {}
 };
 
 enum class BinaryOperationType {
-    ADD, SUB, DIV, MUL, LT, GT, EQ, NOT_EQ, ERR
+    ADD, SUB, DIV, MUL, LT, GT, EQ, NOT_EQ, OR, AND
 };
 
 struct BinaryExpr : Expr {
@@ -61,7 +61,7 @@ struct VarDeclaration_ST : Statement {
     std::string var_name;
     Expr *value;
 
-    VarDeclaration_ST(std::string &var, Expr *value) : var_name(var), value(value) {
+    VarDeclaration_ST(const std::string &var, Expr *value) : var_name(var), value(value) {
     }
 
     ~VarDeclaration_ST() override {

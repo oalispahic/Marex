@@ -56,6 +56,20 @@ build CMakeFiles/Marex.dir/Lexer/lexer.cpp.o: CXX_COMPILER__Marex_unscanned_Debu
   OBJECT_DIR = CMakeFiles/Marex.dir
   OBJECT_FILE_DIR = CMakeFiles/Marex.dir/Lexer
 
+build CMakeFiles/Marex.dir/parser/parser.cpp.o: CXX_COMPILER__Marex_unscanned_Debug /Users/omaralispahic/Documents/projekti/Marex/parser/parser.cpp || cmake_object_order_depends_target_Marex
+  DEP_FILE = CMakeFiles/Marex.dir/parser/parser.cpp.o.d
+  FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk -fcolor-diagnostics
+  INCLUDES = -I/Users/omaralispahic/Documents/projekti/Marex/. -I/Users/omaralispahic/Documents/projekti/Marex/Lexer
+  OBJECT_DIR = CMakeFiles/Marex.dir
+  OBJECT_FILE_DIR = CMakeFiles/Marex.dir/parser
+
+build CMakeFiles/Marex.dir/interpreter/interpreter.cpp.o: CXX_COMPILER__Marex_unscanned_Debug /Users/omaralispahic/Documents/projekti/Marex/interpreter/interpreter.cpp || cmake_object_order_depends_target_Marex
+  DEP_FILE = CMakeFiles/Marex.dir/interpreter/interpreter.cpp.o.d
+  FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk -fcolor-diagnostics
+  INCLUDES = -I/Users/omaralispahic/Documents/projekti/Marex/. -I/Users/omaralispahic/Documents/projekti/Marex/Lexer
+  OBJECT_DIR = CMakeFiles/Marex.dir
+  OBJECT_FILE_DIR = CMakeFiles/Marex.dir/interpreter
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Marex
@@ -64,7 +78,7 @@ build CMakeFiles/Marex.dir/Lexer/lexer.cpp.o: CXX_COMPILER__Marex_unscanned_Debu
 #############################################
 # Link the executable Marex
 
-build Marex: CXX_EXECUTABLE_LINKER__Marex_Debug CMakeFiles/Marex.dir/Lexer/lexer.cpp.o
+build Marex: CXX_EXECUTABLE_LINKER__Marex_Debug CMakeFiles/Marex.dir/Lexer/lexer.cpp.o CMakeFiles/Marex.dir/parser/parser.cpp.o CMakeFiles/Marex.dir/interpreter/interpreter.cpp.o
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk
   OBJECT_DIR = CMakeFiles/Marex.dir
   POST_BUILD = :
