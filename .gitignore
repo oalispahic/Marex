@@ -8,6 +8,7 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 CTestTestfile.cmake
+.cmake/
 
 # Build system files
 *.ninja
@@ -22,6 +23,6 @@ CTestTestfile.cmake
 *.out
 *.dll
 
-# Logs
+# Logs & testing
 Testing/
 *.log
