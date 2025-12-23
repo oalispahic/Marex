@@ -104,7 +104,7 @@ Syntax errors are handled during parsing and runtime errors are reported during 
 
 If you would like to try to compile the project, clone this repo and if you have g++ installed run 
 ```
-g++ -std=c++20 src/*.cpp -Iinclude -o marex
+g++ -std=c++11 src/*.cpp -Iinclude -o marex
 ```
 in the root of your directory. You will get a marex compile.
 
