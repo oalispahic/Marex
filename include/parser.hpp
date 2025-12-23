@@ -6,7 +6,7 @@
 #define MAREX_PARSER_HPP
 
 #include "token_.hpp"
-#include "ast/ast_nodes.hpp"
+#include "ast_nodes.hpp"
 #include <vector>
 #include <string>
 

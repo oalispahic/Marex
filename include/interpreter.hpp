@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include "../parser/parser.hpp"
+#include "parser.hpp"
 
 enum class Type{
     INT,

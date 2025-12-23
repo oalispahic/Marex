@@ -2,7 +2,7 @@
 // Created by Omar Alispahic on 21. 12. 2025..
 //
 #include <iostream>
-#include "interpreter.hpp"
+#include "include/interpreter.hpp"
 
 void Interpreter::run(Program *prog) {
     for (Statement *statements: prog->statements) {
