@@ -18,21 +18,23 @@ enum class TokenType{
     ASSIGN,
     ARROW,
     PLUS, MINUS, MULTIPLY, DIVISION,
-    LESS, GREATER, EQUAL,
+    LESS, GREATER, EQUAL, NOT_EQ,
     AND, OR,
-    L_PAR, R_PAR, SEMICOLON,
+    L_PAR, R_PAR, SEMICOLON, NEWLN,
 
     IDENT,
     NUMBER,
     STRING,
 
     END_OF_FILE,
-    ERR
+    ERR,
+
 };
 
 struct Token{
     TokenType type;
     std::string val;
+    int token_line;
 };
 
 #endif //MAREX_LEXER_HPP
