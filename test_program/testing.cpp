@@ -1,7 +1,7 @@
 //
 // Created by Omar Alispahic on 23. 12. 2025..
 //
-#include "include/lexer.hpp"
+/*#include "include/lexer.hpp"
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -40,4 +40,4 @@ int main() {
     new_int.run(parsed);
 
     return 0;
-}
+}*/

@@ -74,7 +74,7 @@ void Interpreter::execStatement(Statement *statement) {
     if (auto print = dynamic_cast<Print_ST *>(statement)) {
         Value val = evalExpr(print->print_value);
         if (val.type == Type::INT)
-            std::cout << val.integer_value << '\n';
+            std::cout << val.integer_value;
         else if(val.type == Type::STRING && val.stringValue == "\n")
             std::cout << val.stringValue;
         else if (val.type == Type::STRING)

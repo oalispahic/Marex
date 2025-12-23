@@ -9,7 +9,15 @@
 #include "../include/parser.hpp"
 #include "../include/interpreter.hpp"
 
-void compile_and_run(std::string source){
+
+void clear_terminal(){
+#if defined(_WIN32) || defined(__MINGW32__) || defined(__CYGWIN__)
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+void compile_and_run(const std::string &source){
     try{
         Lexer lexer(source);
         auto tokens = lexer.tokenize();
@@ -29,7 +37,7 @@ void compile_and_run(std::string source){
 void repl(){
     std::string line;
     std::string program;
-
+    clear_terminal();
     std::cout<<"Welcome to Marex REPL (type :run to execute, :exit to quit)\n";
 
     while(true){
@@ -37,15 +45,16 @@ void repl(){
         std::getline(std::cin,line);
 
         if(line==":exit"){
-            std::cout<<'\n'<<"Quit!";
+            std::cout<<'\n'<<"Quit!"<<'\n';
             break;
         }
         if(line == ":run"){
             compile_and_run(program);
+            std::cout<<'\n';
             program.clear();
             continue;
         }
-        program += line + '\n';
+        program += line;
     }
 }
 
@@ -67,6 +76,7 @@ int main(int argc, char** argv){
     std::string source = buffer.str();
 
     compile_and_run(source);
+    source.clear();
 
     return 0;
 }
