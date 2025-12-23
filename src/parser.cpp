@@ -3,9 +3,9 @@
 //
 #include <string>
 #include <vector>
-#include "include/token_.hpp"
-#include "include/parser.hpp"
-#include "include/ast_nodes.hpp"
+#include "../include/token_.hpp"
+#include "../include/parser.hpp"
+#include "../include/ast_nodes.hpp"
 
 const Token &Parser::peek() const { return tokens[current_token]; }
 

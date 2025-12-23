@@ -16,5 +16,6 @@ add_executable(Marex
         src/parser.cpp
         src/lexer.cpp
         src/interpreter.cpp
-        src/testing.cpp)
+        test_program/testing.cpp
+        src/main.cpp)
 

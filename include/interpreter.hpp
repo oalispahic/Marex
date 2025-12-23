@@ -40,6 +40,7 @@ struct Value{
         Value val;
         val.type = Type::BOOL;
         val.boolVal = (b>=1);
+        return val;
     }
 };
 

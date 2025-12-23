@@ -2,7 +2,7 @@
 // Created by Omar Alispahic on 21. 12. 2025..
 //
 #include <iostream>
-#include "include/interpreter.hpp"
+#include "../include/interpreter.hpp"
 
 void Interpreter::run(Program *prog) {
     for (Statement *statements: prog->statements) {
@@ -53,7 +53,7 @@ Value Interpreter::evalExpr(Expr *expression) {
                 throw std::runtime_error("Unknown binary operator. ");
         }
     }
-
+    return Value::makeInt(0);   //have to fix this at some point with proper null
 }
 
 void Interpreter::execStatement(Statement *statement) {
