@@ -15,7 +15,7 @@ written in EBNF form.
 
 The following implementation consists of: 
 * Lexer
-* LL1 parser
+* LL(k) parser
 * AST tree
 * Tree walking interpreter
 
