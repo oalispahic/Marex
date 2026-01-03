@@ -83,7 +83,7 @@ The language follows an interpreter pipeline:
 ```
 
 * The lexer turns the raw soruce file into an array of Tokens
-* The parser is an LL1 parser that constructs an Abstract Syntax Tree (AST)
+* The parser is an LL(k) parser that constructs an Abstract Syntax Tree (AST)
 * Interpreter walks the AST and executes directly
 
 ---
