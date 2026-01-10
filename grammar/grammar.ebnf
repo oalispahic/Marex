@@ -9,7 +9,7 @@ STATEMENT      ::= VAR_DECL
 
 
 
-VAR_DECL	::= "new" IDENT ":=" EXPR
+VAR_DECL	::= "var" IDENT ":=" EXPR
 ASSIGN 		::= IDENT ":=" EXPR
 PRINT 		::= "print" "(" EXPR ")"
 
