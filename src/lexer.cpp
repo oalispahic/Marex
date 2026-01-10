@@ -61,7 +61,7 @@ std::vector<Token> Lexer::tokenize() {
                 consume();
             }
 
-            if (val == "new") tokens.push_back({TokenType::NEW, val, line});
+            if (val == "var") tokens.push_back({TokenType::VAR, val, line});
             else if (val == "if") tokens.push_back({TokenType::IF, val, line});
             else if (val == "fi") tokens.push_back({TokenType::FI, val, line});
             else if (val == "else") tokens.push_back({TokenType::ELSE, val, line});

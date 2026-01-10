@@ -48,7 +48,7 @@ Program *Parser::parse() {
 }
 
 Statement *Parser::parseStatement() {
-    if (match_advance(TokenType::NEW)) return parseVarDeclaration();
+    if (match_advance(TokenType::VAR)) return parseVarDeclaration();
     if (match_advance(TokenType::PRINT)) return parsePrint();
     if (match_advance(TokenType::IF)) return parseIf();
     if (match_advance(TokenType::LOOP)) return parseLoop();
@@ -64,7 +64,7 @@ Statement *Parser::parseStatement() {
 }
 
 Statement *Parser::parseVarDeclaration() {
-    const Token &varName = consume(TokenType::IDENT, "Expected variable name after 'new'!");
+    const Token &varName = consume(TokenType::IDENT, "Expected variable name after 'var'!");
     consume(TokenType::ASSIGN, "Expected ':=' in assignment. ");
     Expr *value = parseExpr();
     return new VarDeclaration_ST(varName.val, value);
@@ -133,7 +133,7 @@ Statement *Parser::parseLoop() {
 
 
         Statement *initial = nullptr;
-        if (check_valid_type(TokenType::NEW)) {
+        if (check_valid_type(TokenType::VAR)) {
             next();
             initial = parseVarDeclaration();
         } else if (check_valid_type(TokenType::IDENT)) Token identifier = next();
