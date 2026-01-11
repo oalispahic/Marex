@@ -49,6 +49,10 @@ Value Interpreter::evalExpr(Expr *expression) {
                 return Value::makeInt(left.integer_value == right.integer_value);
             case BinaryOperationType::NOT_EQ:
                 return Value::makeInt(left.integer_value != right.integer_value);
+            case BinaryOperationType::AND:
+                return Value::makeInt(left.integer_value && right.integer_value);
+            case BinaryOperationType::OR:
+                return Value::makeInt(left.integer_value || right.integer_value);
             default:
                 throw std::runtime_error("Unknown binary operator. ");
         }
