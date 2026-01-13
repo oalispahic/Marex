@@ -1,8 +1,8 @@
 
-new last_pass := 1
+var last_pass := 1
 
-loop(new i := 0; i<5; i := i+1)
-    loop(new j := 0; j<5; j:=j+1)
+loop(var i := 0; i<5; i := i+1)
+    loop(var j := 0; j<5; j:=j+1)
         if(j > i)
             print("* ")
         fi
@@ -18,8 +18,8 @@ loop(new i := 0; i<5; i := i+1)
 done
 i := "Test"
 
-new st := 1
-new nd := 10
+var st := 1
+var nd := 10
 
 print(i)
 print(newln)
