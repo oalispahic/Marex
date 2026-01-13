@@ -57,6 +57,9 @@ struct Statement : Node {
     virtual ~Statement() = default;
 };
 
+struct NullStmt : Statement {
+    virtual ~NullStmt() = default;
+};
 struct VarDeclaration_ST : Statement {
     std::string var_name;
     Expr *value;
