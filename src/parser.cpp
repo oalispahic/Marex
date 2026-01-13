@@ -59,8 +59,8 @@ Statement *Parser::parseStatement() {
     //Can add expr as stmt for function calls later
 
     Expr *expression = parseExpr();
-
-    return new Print_ST(expression);
+    return new NullStmt();
+   // return new Print_ST(expression);
 }
 
 Statement *Parser::parseVarDeclaration() {
