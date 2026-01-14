@@ -26,10 +26,10 @@ Bellow is a simple example program demonstrating core functionalities
 like nested loops, conditionals, dynamic typing and a formatted output
 
 ```cpp
-new last_pass := 1
+var last_pass := 1
 
-loop(new i := 0; i<5; i := i+1)
-    loop(new j := 0; j<5; j:=j+1)
+loop(var i := 0; i<5; i := i+1)
+    loop(var j := 0; j<5; j:=j+1)
         if(j > i)
             print("* ")
         fi
