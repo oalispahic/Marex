@@ -38,12 +38,16 @@ void repl(){
     std::string line;
     std::string program;
     clear_terminal();
-    std::cout<<"Welcome to Marex REPL (type :run to execute, :exit to quit)\n";
+    std::cout<<"Welcome to Marex REPL (type :run to execute, :exit to quit, :clear to clear terminal)\n";
 
     while(true){
         std::cout<<"marex> ";
         std::getline(std::cin,line);
 
+        if (line ==":clear") {
+            clear_terminal();
+            line.clear();
+        }
         if(line==":exit"){
             std::cout<<'\n'<<"Quit!"<<'\n';
             break;
@@ -54,6 +58,7 @@ void repl(){
             program.clear();
             continue;
         }
+
         program += line;
     }
 }
