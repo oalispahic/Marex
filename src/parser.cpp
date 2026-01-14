@@ -60,7 +60,7 @@ Statement *Parser::parseStatement() {
 
     Expr *expression = parseExpr();
     return new NullStmt();
-   // return new Print_ST(expression);
+
 }
 
 Statement *Parser::parseVarDeclaration() {
