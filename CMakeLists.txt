@@ -7,6 +7,15 @@ include_directories(.)
 include_directories(Lexer)
 
 add_executable(Marex
-        Lexer/token_.hpp
-        Lexer/lexer.hpp
-        Lexer/lexer.cpp)
+        include/token_.hpp
+        include/lexer.hpp
+        include/ast_nodes.hpp
+        include/parser.hpp
+
+        include/interpreter.hpp
+        src/parser.cpp
+        src/lexer.cpp
+        src/interpreter.cpp
+        test_program/testing.cpp
+        src/main.cpp)
+

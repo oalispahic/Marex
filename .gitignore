@@ -1,0 +1,28 @@
+# Build directories
+cmake-build-debug/
+cmake-build-release/
+build/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+.cmake/
+
+# Build system files
+*.ninja
+*.ninja_deps
+*.ninja_log
+
+# Compiled objects and binaries
+*.o
+*.a
+*.so
+*.exe
+*.out
+*.dll
+
+# Logs & testing
+Testing/
+*.log
