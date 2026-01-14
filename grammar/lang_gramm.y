@@ -15,7 +15,9 @@ void yyerror(const char *s);
 %token OR AND
 %token EQ NEQ         /* == != */
 %token LT GT          /* < > */
+%token ARROW          /* -> */
 
+/* ===== PRECEDENCE ===== */
 %left OR
 %left AND
 %left EQ NEQ
@@ -23,6 +25,8 @@ void yyerror(const char *s);
 %left '+' '-'
 %left '*' '/'
 %right UMINUS
+
+%start program
 
 %%
 
@@ -40,12 +44,12 @@ stmt_list
     ;
 
 statement
-    : var_decl
-    | assign
-    | print_stmt
+    : var_decl ';'
+    | assign ';'
+    | print_stmt ';'
+    | expr_stmt ';'
     | if_stmt
     | loop_stmt
-    | expr_stmt
     ;
 
 /* ===== DECLARATIONS & ASSIGNMENT ===== */
@@ -79,7 +83,7 @@ loop_stmt
     ;
 
 range_loop
-    : LOOP '(' IDENT "->" IDENT ')' stmt_list DONE
+    : LOOP '(' IDENT ARROW IDENT ')' stmt_list DONE
     ;
 
 for_loop
@@ -141,6 +145,12 @@ primary
     | STRING
     | IDENT
     | '(' expr ')'
+    ;
+
+/* ===== EXPRESSION STATEMENT ===== */
+
+expr_stmt
+    : expr
     ;
 
 %%
