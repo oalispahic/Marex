@@ -34,6 +34,10 @@ struct IdentExpr : Expr {
      IdentExpr(const std::string &ident_val) : ident_val(ident_val) {}
 };
 
+struct ArrayExpr : Expr {
+    std::vector<Expr *> elements;
+};
+
 enum class BinaryOperationType {
     ADD, SUB, DIV, MUL, LT, GT, EQ, NOT_EQ, OR, AND
 };
