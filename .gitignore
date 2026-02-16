@@ -14,6 +14,7 @@ CTestTestfile.cmake
 *.ninja
 *.ninja_deps
 *.ninja_log
+.DS_Store
 
 # Compiled objects and binaries
 *.o
@@ -22,6 +23,9 @@ CTestTestfile.cmake
 *.exe
 *.out
 *.dll
+
+# executables without extension
+marex
 
 # Logs & testing
 Testing/
