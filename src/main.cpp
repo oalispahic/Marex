@@ -70,6 +70,19 @@ int main(int argc, char** argv){
         repl();
         return 1;
     }
+    std::string arg = argv[1];
+    if (arg == "-v" || arg == "--version") {
+        std::cout<<"Marex 1.0.0"<<'\n';
+        return 0;
+    }
+
+    if (arg == "--help" || arg == "-h") {
+        std::cout << "Usage: marex [options] <file.mx>\n"
+                  << "Options:\n"
+                  << "  --version   Show version\n"
+                  << "  --help      Show this message\n";
+        return 0;
+    }
 
     std::ifstream file(argv[1]);
     if(!file){
