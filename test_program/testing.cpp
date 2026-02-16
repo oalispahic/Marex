@@ -1,7 +1,8 @@
 //
 // Created by Omar Alispahic on 23. 12. 2025..
 //
-/*#include "include/lexer.hpp"
+/*
+#include "include/lexer.hpp"
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -13,7 +14,7 @@ int main() {
 
     std::string words[] = {"new", "print", "if", "else", "fi", "loop", "done", "assign",
                            "arrow", "plus", "minus", "multiply",
-                           "division", "less", "greater", "equal", "not_equal", "and", "or", "l_par", "r_par",
+                           "division", "less", "greater", "equal", "not_equal", "and", "or", "l_par", "r_par","l_ang","r_ang",
                            "semicolon", "newln",
                            "ident", "number", "string", "end_of_file", "err",
     };
@@ -25,7 +26,7 @@ int main() {
     auto out = lex.tokenize();
     for (auto &i: out) std::cout << words[int(i.type)] << ": " << i.val << '\n';
 
-    Parser pars(out);
+    /*Parser pars(out);
     Program *parsed;
     bool failed = false;
     try {
