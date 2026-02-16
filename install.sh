@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e  # Exit on error
+set -e
 
 echo "=== Marex Installer ==="
 
@@ -8,61 +8,35 @@ echo "=== Marex Installer ==="
 OS="$(uname)"
 ARCH="$(uname -m)"
 
-echo "Detected system: $OS ($ARCH)"
-
 if [[ "$OS" != "Darwin" && "$OS" != "Linux" ]]; then
-    echo "Unsupported operating system."
+    echo "Unsupported OS"
     exit 1
 fi
 
-# Check for g++
+# Check for compiler
 if ! command -v g++ &> /dev/null; then
-    echo "Error: g++ is not installed."
-    echo "Please install a C++ compiler and try again."
+    echo "Error: g++ is required but not installed."
     exit 1
 fi
 
-echo "Compiler found: $(g++ --version | head -n 1)"
+echo "Compiling Marex..."
 
-# Create temporary build directory
 BUILD_DIR="build_marex_install"
 rm -rf "$BUILD_DIR"
 mkdir "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-echo "Compiling Marex..."
-
 g++ -std=c++11 -O2 ../src/*.cpp -I../include -o marex
 
-echo "Compilation successful."
-
-# Install location
-INSTALL_DIR="$HOME/.local/bin"
-mkdir -p "$INSTALL_DIR"
-
-cp marex "$INSTALL_DIR/"
-chmod +x "$INSTALL_DIR/marex"
-
-echo ""
-echo "Installed Marex to:"
-echo "  $INSTALL_DIR/marex"
-
-# Clean up
 cd ..
+
+echo "Installing to /usr/local/bin"
+
+sudo cp "$BUILD_DIR/marex" /usr/local/bin/marex
+sudo chmod +x /usr/local/bin/marex
+
 rm -rf "$BUILD_DIR"
 
-# Check if ~/.local/bin is in PATH
-if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-    echo ""
-    echo "IMPORTANT:"
-    echo "Add this line to your ~/.bashrc or ~/.zshrc:"
-    echo ""
-    echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
-    echo ""
-    echo "Then restart your terminal."
-fi
-
 echo ""
-echo "Installation complete."
-echo "You can now run:"
-echo "  marex --help"
+echo "Marex installed successfully."
+echo "Run by typing marex in terminal from anywhere"
