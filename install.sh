@@ -2,11 +2,15 @@
 
 set -e
 
-echo "=== Marex Installer ==="
 
-# Detect OS
+echo "======Marex install script======"
+
+
 OS="$(uname)"
 ARCH="$(uname -m)"
+
+echo ""
+echo "Using $OS on $ARCH"
 
 if [[ "$OS" != "Darwin" && "$OS" != "Linux" ]]; then
     echo "Unsupported OS"
