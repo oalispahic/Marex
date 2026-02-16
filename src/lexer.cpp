@@ -144,6 +144,15 @@ std::vector<Token> Lexer::tokenize() {
             case ';' :
                 tokens.push_back({TokenType::SEMICOLON, ";", line});
                 break;
+            case '[':
+                tokens.push_back({TokenType::L_BRACKET, "[", line});
+                break;
+            case ']':
+                tokens.push_back({TokenType::R_BRACKET, "]", line});
+                break;
+            case ',':
+                tokens.push_back({TokenType::DOT, ".", line});
+                break;;
             default:
                 tokens.push_back({TokenType::ERR, std::string(1, current()), line});
                 break;
