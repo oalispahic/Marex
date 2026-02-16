@@ -27,6 +27,8 @@ private:
 
     Statement *parseVarDeclaration();
 
+    Statement *parseArray();
+
     Statement *parseAssign();
 
     Statement *parsePrint();
