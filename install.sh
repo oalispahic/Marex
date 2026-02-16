@@ -33,7 +33,7 @@ cd "$BUILD_DIR"
 echo "Compiling Marex..."
 
 # Adjust this if your file layout changes
-g++ -std=c+110 -O2 ../src/*.cpp -I../include -o marex
+g++ -std=c+11 -O2 ../src/*.cpp -I../include -o marex
 
 echo "Compilation successful."
 
