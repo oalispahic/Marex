@@ -65,10 +65,16 @@ Statement *Parser::parseStatement() {
 
 Statement *Parser::parseVarDeclaration() {
     const Token &varName = consume(TokenType::IDENT, "Expected variable name after 'var'!");
-    consume(TokenType::ASSIGN, "Expected ':=' in assignment. ");
+    if (!match_advance(TokenType::ASSIGN)) {
+        Expr *nullExpr = new NullExpr;
+        return new VarDeclaration_ST(varName.val, nullExpr);
+    }
+
     Expr *value = parseExpr();
     return new VarDeclaration_ST(varName.val, value);
 }
+
+
 
 Statement *Parser::parseAssign() {
     const Token &varName = consume(TokenType::IDENT, "Expected variable to assign to!");
