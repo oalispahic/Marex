@@ -16,6 +16,10 @@ struct Expr : Node {
     virtual ~Expr() = default;
 };
 
+struct NullExpr : Expr {
+    virtual ~NullExpr() = default;
+};
+
 struct NumExpr : Expr {
     int val;
 
@@ -36,6 +40,11 @@ struct IdentExpr : Expr {
 
 struct ArrayExpr : Expr {
     std::vector<Expr *> elements;
+};
+
+struct ArrayIndexExpr : Expr {
+    Expr *array;
+    Expr *index;
 };
 
 enum class BinaryOperationType {
@@ -66,6 +75,7 @@ struct NullStmt : Statement {
 };
 struct VarDeclaration_ST : Statement {
     std::string var_name;
+    bool isArray;
     Expr *value;
 
     VarDeclaration_ST(const std::string &var, Expr *value) : var_name(var), value(value) {
