@@ -59,7 +59,7 @@ void repl(){
             continue;
         }
 
-        program += line;
+        program += line + "\n";
     }
 }
 
