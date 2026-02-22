@@ -63,7 +63,13 @@ Value Interpreter::evalExpr(Expr *expression) {
 void Interpreter::execStatement(Statement *statement) {
 
     if (auto var = dynamic_cast<VarDeclaration_ST *>(statement)) {
-        Value val = evalExpr(var->value);
+        if (var->value != nullptr) {
+            Value val = evalExpr(var->value);
+            global_scope[var->var_name] = val;
+            return;
+        }
+        Value val;
+        val.type = Type::NaN;
         global_scope[var->var_name] = val;
         return;
     }
