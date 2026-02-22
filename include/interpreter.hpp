@@ -42,6 +42,12 @@ struct Value{
         val.boolVal = (b>=1);
         return val;
     }
+
+    static Value makeNaN() {
+        Value val;
+        val.type = Type::NaN;
+        return val;
+    }
 };
 
 class Interpreter{
