@@ -33,6 +33,8 @@ private:
 
     Statement *parsePrint();
 
+    Statement *parseSystem();
+
     Statement *parseIf();
 
     Statement *parseLoop();
