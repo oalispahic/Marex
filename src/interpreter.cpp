@@ -15,6 +15,7 @@ Value Interpreter::evalExpr(Expr *expression) {
     if (auto num = dynamic_cast<NumExpr *>(expression)) {
         return Value::makeInt(num->val);
     }
+
     if (auto ident = dynamic_cast<IdentExpr *>(expression)) {
         if (!global_scope.count(ident->ident_val))
             throw std::runtime_error("Undefined variable: " + ident->ident_val);
@@ -29,35 +30,32 @@ Value Interpreter::evalExpr(Expr *expression) {
         Value left = evalExpr(bin->left);
         Value right = evalExpr(bin->right);
 
-        if (left.type != Type::INT || right.type != Type::INT)
-            throw std::runtime_error("Binary operators work only on integer variables! ");
-
         switch (bin->type) {
             case BinaryOperationType::ADD:
-                return Value::makeInt(left.integer_value + right.integer_value);
+                return left.add(right);
             case BinaryOperationType::SUB:
-                return Value::makeInt(left.integer_value - right.integer_value);
+                return left.sub(right);
             case BinaryOperationType::MUL:
-                return Value::makeInt(left.integer_value * right.integer_value);
+                return left.mul(right);
             case BinaryOperationType::DIV:
-                return Value::makeInt(left.integer_value / right.integer_value);
+                return left.div(right);
             case BinaryOperationType::LT:
-                return Value::makeInt(left.integer_value < right.integer_value);
+                return left.lessThan(right);
             case BinaryOperationType::GT:
-                return Value::makeInt(left.integer_value > right.integer_value);
+                return left.greaterThan(right);
             case BinaryOperationType::EQ:
-                return Value::makeInt(left.integer_value == right.integer_value);
+                return left.equals(right);
             case BinaryOperationType::NOT_EQ:
-                return Value::makeInt(left.integer_value != right.integer_value);
+                return left.notEquals(right);
             case BinaryOperationType::AND:
-                return Value::makeInt(left.integer_value && right.integer_value);
+                return left.logicAnd(right);
             case BinaryOperationType::OR:
-                return Value::makeInt(left.integer_value || right.integer_value);
+                return left.logicOr(right);
             default:
                 throw std::runtime_error("Unknown binary operator. ");
         }
     }
-    return Value::makeInt(0);   //have to fix this at some point with proper null
+    return Value::makeNaN();
 }
 
 void Interpreter::execStatement(Statement *statement) {
@@ -85,12 +83,21 @@ void Interpreter::execStatement(Statement *statement) {
         Value val = evalExpr(print->print_value);
         if (val.type == Type::INT)
             std::cout << val.integer_value;
+        else if (val.type == Type::FLOAT)
+            std::cout << val.float_value;
         else if(val.type == Type::STRING && val.stringValue == "\n")
             std::cout << val.stringValue;
         else if (val.type == Type::STRING)
             std::cout << val.stringValue;
         return;
     }
+
+    if (auto system_statement = dynamic_cast<System_ST *>(statement)) {
+        std::string statement = system_statement->system_statement;
+        system(statement.c_str());
+        return;
+    }
+
 
     if (auto if_statement = dynamic_cast<If_ST *>(statement)) {
         Value condition = evalExpr(if_statement->condition);
