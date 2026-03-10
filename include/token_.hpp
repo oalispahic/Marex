@@ -6,7 +6,7 @@
 #ifndef MAREX_LEXER_HPP
 #define MAREX_LEXER_HPP
 
-enum class TokenType{
+enum class TokenType {
     VAR = 0,
     PRINT,
     IF,
@@ -14,24 +14,25 @@ enum class TokenType{
     FI,
     LOOP,
     DONE,
+    SYS,
 
     ASSIGN,
     ARROW,
-    PLUS, MINUS, MULTIPLY, DIVISION,
+    PLUS, PLUSPLUS, MINUS, MULTIPLY, DIVISION,
     LESS, GREATER, EQUAL, NOT_EQ,
     AND, OR,
-    L_PAR, R_PAR, L_BRACKET, R_BRACKET, DOT,  SEMICOLON, NEWLN,
+    L_PAR, R_PAR, L_BRACKET, R_BRACKET, DOT, SEMICOLON, NEWLN,
 
     IDENT,
     NUMBER,
+    FLOAT,
     STRING,
 
     END_OF_FILE,
     ERR,
-
 };
 
-struct Token{
+struct Token {
     TokenType type;
     std::string val;
     int token_line;
