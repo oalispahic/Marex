@@ -69,18 +69,34 @@ std::vector<Token> Lexer::tokenize() {
             else if (val == "done") tokens.push_back({TokenType::DONE, val, line});
             else if (val == "print") tokens.push_back({TokenType::PRINT, val, line});
             else if (val == "newln") tokens.push_back({TokenType::NEWLN, "\n", line});
+            else if (val == "sys") tokens.push_back({TokenType::SYS, val, line});
             else tokens.push_back({TokenType::IDENT, val, line});
 
             continue;
         }
 
         if (isdigit(current())) {         //Nums
+            bool isFloat = false;
             std::string num;
             while (isdigit(current())) {
                 num += current();
                 consume();
             }
-            tokens.push_back({TokenType::NUMBER, num, line});
+
+            if (current() == '.' && isdigit(peek())) {
+                isFloat = true;
+                num+=current();
+                consume();
+                while (isdigit(current())) {
+                    num+=current();
+                    consume();
+                }
+            }
+
+            if (isFloat) tokens.push_back({TokenType::FLOAT, num, line});
+            else {
+                tokens.push_back({TokenType::NUMBER, num, line});
+            }
             continue;
         }
 
@@ -103,6 +119,13 @@ std::vector<Token> Lexer::tokenize() {
             consume();
             consume();
             tokens.push_back({TokenType::NOT_EQ, "!=", line});
+            continue;
+        }
+
+        if (current() == '+' && peek() == '+') {
+            consume();
+            consume();
+            tokens.push_back({TokenType::PLUSPLUS, "++", line});
             continue;
         }
 
@@ -150,7 +173,7 @@ std::vector<Token> Lexer::tokenize() {
             case ']':
                 tokens.push_back({TokenType::R_BRACKET, "]", line});
                 break;
-            case ',':
+            case '.':
                 tokens.push_back({TokenType::DOT, ".", line});
                 break;;
             default:
