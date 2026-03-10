@@ -22,8 +22,9 @@ struct NullExpr : Expr {
 
 struct NumExpr : Expr {
     int val;
+    float floatValue;
 
-    explicit NumExpr(int num_val) : val(num_val) {}
+    explicit NumExpr(int num_val, float float_val = 0) : val(num_val), floatValue(float_val) {}
 };
 
 struct StringExpr : Expr {
@@ -102,6 +103,12 @@ struct Print_ST : Statement {
 
     ~Print_ST() override { delete print_value; }
 
+};
+
+struct System_ST : Statement {
+    std::string system_statement;
+
+    explicit System_ST(std::string &system_statement) : system_statement(system_statement) {}
 };
 
 struct Loop_ST : Statement {
