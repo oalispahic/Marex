@@ -12,8 +12,8 @@
 
 int main() {
 
-    std::string words[] = {"new", "print", "if", "else", "fi", "loop", "done", "assign",
-                           "arrow", "plus", "minus", "multiply",
+    std::string words[] = {"new", "print", "if", "else", "fi", "loop", "done", "sys", assign",
+                           "arrow", "plus","plusplus" ,"minus", "multiply",
                            "division", "less", "greater", "equal", "not_equal", "and", "or", "l_par", "r_par","l_ang","r_ang",
                            "semicolon", "newln",
                            "ident", "number", "string", "end_of_file", "err",
