@@ -108,7 +108,7 @@ struct Print_ST : Statement {
 struct System_ST : Statement {
     std::string system_statement;
 
-    explicit System_ST(std::string &system_statement) : system_statement(system_statement) {}
+    explicit System_ST(const std::string &system_statement) : system_statement(system_statement) {}
 };
 
 struct Loop_ST : Statement {
