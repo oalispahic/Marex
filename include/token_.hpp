@@ -14,6 +14,8 @@ enum class TokenType {
     FI,
     LOOP,
     DONE,
+    STEP,
+    FUN,
     SYS,
 
     ASSIGN,

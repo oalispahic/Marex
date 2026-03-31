@@ -70,6 +70,8 @@ std::vector<Token> Lexer::tokenize() {
             else if (val == "print") tokens.push_back({TokenType::PRINT, val, line});
             else if (val == "newln") tokens.push_back({TokenType::NEWLN, "\n", line});
             else if (val == "sys") tokens.push_back({TokenType::SYS, val, line});
+            else if (val == "step") tokens.push_back({TokenType::STEP, val, line});
+            else if (val == "fun") tokens.push_back({TokenType::FUN, val, line});
             else tokens.push_back({TokenType::IDENT, val, line});
 
             continue;
