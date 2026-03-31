@@ -39,6 +39,10 @@ private:
 
     Statement *parseLoop();
 
+    Statement *parseRange();
+
+    Statement *parseFor();
+
     //---------PARSE EXPR----------
 
     Expr *parseExpr();
