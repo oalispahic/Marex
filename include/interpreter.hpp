@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "values_types.hpp"
 #include "parser.hpp"
 
@@ -16,7 +17,9 @@ class Interpreter{
     std::unordered_map<std::string,Value> global_scope;
 
 public:
+    explicit Interpreter(const std::vector<std::string>& args = {});
     void run(Program* prog);
+    void set_args(const std::vector<std::string>& args);
 
 private:
     void execStatement(Statement* statement);

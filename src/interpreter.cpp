@@ -4,6 +4,17 @@
 #include <iostream>
 #include "../include/interpreter.hpp"
 
+Interpreter::Interpreter(const std::vector<std::string>& args) {
+    set_args(args);
+}
+
+void Interpreter::set_args(const std::vector<std::string>& args) {
+    global_scope["ARGC"] = Value::makeInt(static_cast<int>(args.size()));
+    for (size_t i = 0; i < args.size(); ++i) {
+        global_scope["ARGV" + std::to_string(i)] = Value::makeString(args[i]);
+    }
+}
+
 void Interpreter::run(Program *prog) {
     for (Statement *statements: prog->statements) {
         execStatement(statements);
