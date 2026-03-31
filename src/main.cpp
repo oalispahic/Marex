@@ -8,6 +8,8 @@
 #include "../include/lexer.hpp"
 #include "../include/parser.hpp"
 #include "../include/interpreter.hpp"
+#include "../include/cli.hpp"
+#include "../include/version.hpp.in"
 
 
 void clear_terminal(){
@@ -17,7 +19,7 @@ void clear_terminal(){
     system("clear");
 #endif
 }
-void compile_and_run(const std::string &source){
+void compile_and_run(const std::string &source, const std::vector<std::string>& args){
     try{
         Lexer lexer(source);
         auto tokens = lexer.tokenize();
@@ -25,7 +27,7 @@ void compile_and_run(const std::string &source){
         Parser parser(tokens);
         auto program = parser.parse();
 
-        Interpreter interpreter;
+        Interpreter interpreter(args);
         interpreter.run(program);
     }
     catch(const std::exception &e){
@@ -53,7 +55,7 @@ void repl(){
             break;
         }
         if(line == ":run"){
-            compile_and_run(program);
+            compile_and_run(program, {});
             std::cout<<'\n';
             program.clear();
             continue;
@@ -66,34 +68,38 @@ void repl(){
 
 int main(int argc, char** argv){
 
-    if(argc != 2){
-        repl();
+    CliParseResult parsed = parse_cli(argc, argv);
+    if (!parsed.error.empty()) {
+        std::cerr << parsed.error << '\n';
+        std::cerr << cli_usage();
         return 1;
     }
-    std::string arg = argv[1];
-    if (arg == "-v" || arg == "--version") {
-        std::cout<<"Marex 1.0.0"<<'\n';
+
+    if (parsed.options.show_version) {
+        std::cout << "Marex " << MAREX_VERSION_STRING << '\n';
         return 0;
     }
 
-    if (arg == "--help" || arg == "-h") {
-        std::cout << "Usage: marex [options] <file.mx>\n"
-                  << "Options:\n"
-                  << "  --version   Show version\n"
-                  << "  --help      Show this message\n";
+    if (parsed.options.show_help) {
+        std::cout << cli_usage();
         return 0;
     }
 
-    std::ifstream file(argv[1]);
+    if (parsed.options.repl) {
+        repl();
+        return 0;
+    }
+
+    std::ifstream file(parsed.options.file);
     if(!file){
-        std::cerr<<"Error opening file "<<argv[1]<<'\n';
+        std::cerr<<"Error opening file "<<parsed.options.file<<'\n';
         return 1;
     }
     std::stringstream buffer;
     buffer << file.rdbuf();
     std::string source = buffer.str();
 
-    compile_and_run(source);
+    compile_and_run(source, parsed.options.script_args);
     source.clear();
     std::cout<<'\n';
 
