@@ -167,7 +167,7 @@ ReadResult read_repl_line(const std::string &prompt, const std::vector<std::stri
 void print_help() {
     std::cout << "Commands:\n"
               << "  :help    Show this message\n"
-              << "  :info    List defined variables with type, value and memory use\n"
+              << "  :info    List defined functions and variables (type, value, memory use)\n"
               << "  :reset   Forget all variables\n"
               << "  :clear   Clear the screen\n"
               << "  :exit    Leave the REPL (also Ctrl-D)\n"
@@ -199,7 +199,29 @@ std::string display_value(const Value &value) {
     return "\"" + text + "\"";
 }
 
+void print_functions(const Interpreter &interpreter) {
+    const auto &functions = interpreter.definedFunctions();
+    if (functions.empty()) return;
+
+    std::vector<std::string> names;
+    for (const auto &entry: functions) names.push_back(entry.first);
+    std::sort(names.begin(), names.end());
+
+    std::cout << "Functions:\n";
+    for (const std::string &name: names) {
+        const Function &function = *functions.at(name);
+        std::cout << "  " << name << "(";
+        for (size_t i = 0; i < function.parameters.size(); ++i) {
+            if (i) std::cout << ", ";
+            std::cout << function.parameters[i];
+        }
+        std::cout << ")" << (function.returnValue ? "" : "  [void]") << '\n';
+    }
+}
+
 void print_info(const Interpreter &interpreter) {
+    print_functions(interpreter);
+
     const auto &variables = interpreter.variables();
     if (variables.empty()) {
         std::cout << "No variables defined.\n";

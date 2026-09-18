@@ -4,14 +4,91 @@
 #include <iostream>
 #include "../include/interpreter.hpp"
 
+namespace {
+// Thrown by 'ret' to unwind to the enclosing call.
+struct ReturnSignal {
+    Value value;
+};
+
+// A runtime error carrying the number of call-trace lines appended so far.
+struct TracedError : std::runtime_error {
+    int traceLines;
+    TracedError(const std::string &message, int traceLines)
+        : std::runtime_error(message), traceLines(traceLines) {}
+};
+
+const int MAX_TRACE_LINES = 10;
+
+// Restores the frame stack on scope exit even if an exception escapes.
+struct FrameGuard {
+    std::vector<Scope> &frames;
+    explicit FrameGuard(std::vector<Scope> &frames, Scope frame) : frames(frames) {
+        frames.push_back(std::move(frame));
+    }
+    ~FrameGuard() { frames.pop_back(); }
+};
+}
+
 Interpreter::Interpreter(const std::vector<std::string>& args) {
+    frames.emplace_back();
     set_args(args);
 }
 
 void Interpreter::set_args(const std::vector<std::string>& args) {
-    global_scope["ARGC"] = Value::makeInt(static_cast<int>(args.size()));
+    globals()["ARGC"] = Value::makeInt(static_cast<int>(args.size()));
     for (size_t i = 0; i < args.size(); ++i) {
-        global_scope["ARGV" + std::to_string(i)] = Value::makeString(args[i]);
+        globals()["ARGV" + std::to_string(i)] = Value::makeString(args[i]);
+    }
+}
+
+Scope *Interpreter::scopeOf(const std::string &name) {
+    if (currentFrame().count(name)) return &currentFrame();
+    if (globals().count(name)) return &globals();
+    return nullptr;
+}
+
+Value Interpreter::callFunction(CallExpr *call) {
+    auto found = functions.find(call->name);
+    if (found == functions.end()) {
+        throw std::runtime_error("Line " + std::to_string(call->line) + ": Undefined function: " + call->name);
+    }
+    const std::shared_ptr<Function> function = found->second;   // keep alive during the call
+
+    if (call->arguments.size() != function->parameters.size()) {
+        throw std::runtime_error("Line " + std::to_string(call->line) + ": Function " + call->name +
+                                 " expects " + std::to_string(function->parameters.size()) +
+                                 " argument(s), got " + std::to_string(call->arguments.size()));
+    }
+
+    if (static_cast<int>(frames.size()) > MAX_CALL_DEPTH) {
+        throw std::runtime_error("Line " + std::to_string(call->line) + ": Stack overflow: call depth exceeds " +
+                                 std::to_string(MAX_CALL_DEPTH) + " in " + call->name);
+    }
+
+    // Arguments are evaluated in the caller's frame before the new one exists.
+    Scope frame;
+    for (size_t i = 0; i < call->arguments.size(); ++i) {
+        frame[function->parameters[i]] = evalExpr(call->arguments[i]);
+    }
+
+    FrameGuard guard(frames, std::move(frame));
+    try {
+        for (Statement *statement: function->body) execStatement(statement);
+        return function->returnValue ? evalExpr(function->returnValue) : Value::makeNaN();
+    } catch (const ReturnSignal &early) {
+        return early.value;
+    } catch (const std::runtime_error &error) {
+        // Build a call trace as the error unwinds, innermost call first,
+        // and stop adding lines after MAX_TRACE_LINES.
+        const auto *traced = dynamic_cast<const TracedError *>(&error);
+        const int lines = traced ? traced->traceLines : 0;
+        if (lines < MAX_TRACE_LINES) {
+            throw TracedError(std::string(error.what()) + "\n  in " + call->name + "()", lines + 1);
+        }
+        if (lines == MAX_TRACE_LINES) {
+            throw TracedError(std::string(error.what()) + "\n  ...", lines + 1);
+        }
+        throw;
     }
 }
 
@@ -37,9 +114,13 @@ Value Interpreter::evalExpr(Expr *expression) {
     }
 
     if (auto ident = dynamic_cast<IdentExpr *>(expression)) {
-        if (!global_scope.count(ident->ident_val))
-            throw std::runtime_error("Undefined variable: " + ident->ident_val);
-        return global_scope[ident->ident_val];
+        Scope *scope = scopeOf(ident->ident_val);
+        if (!scope) throw std::runtime_error("Undefined variable: " + ident->ident_val);
+        return (*scope)[ident->ident_val];
+    }
+
+    if (auto call = dynamic_cast<CallExpr *>(expression)) {
+        return callFunction(call);
     }
 
     if(auto string = dynamic_cast<StringExpr*>(expression)){
@@ -88,15 +169,26 @@ void Interpreter::execStatement(Statement *statement) {
     }
 
     if (auto var = dynamic_cast<VarDeclaration_ST *>(statement)) {
-        global_scope[var->var_name] = var->value ? evalExpr(var->value) : Value::makeNaN();
+        Value value = var->value ? evalExpr(var->value) : Value::makeNaN();
+        currentFrame()[var->var_name] = value;
         return;
     }
 
     if (auto assign = dynamic_cast<Assign_ST *>(statement)) {
-        if (!global_scope.count(assign->var_name))
-            throw std::runtime_error("Cannot assign value to undeclared variable " + assign->var_name);
-        global_scope[assign->var_name] = evalExpr(assign->value);
+        Value value = evalExpr(assign->value);
+        Scope *scope = scopeOf(assign->var_name);
+        if (!scope) throw std::runtime_error("Cannot assign value to undeclared variable " + assign->var_name);
+        (*scope)[assign->var_name] = value;
         return;
+    }
+
+    if (auto declaration = dynamic_cast<FunDecl_ST *>(statement)) {
+        functions[declaration->function->name] = declaration->function;
+        return;
+    }
+
+    if (auto ret = dynamic_cast<Return_ST *>(statement)) {
+        throw ReturnSignal{ret->value ? evalExpr(ret->value) : Value::makeNaN()};
     }
 
     if (auto print = dynamic_cast<Print_ST *>(statement)) {
