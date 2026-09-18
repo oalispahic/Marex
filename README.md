@@ -88,6 +88,9 @@ Script arguments are visible inside the program as `ARGC` and `ARGV0`, `ARGV1`, 
 Exit status is `0` on success, `1` for a syntax or runtime error in the script and
 `2` for a bad command line or a file that cannot be opened.
 
+Prompts, errors and `:info` are lightly coloured when writing to a terminal.
+Piped output is plain; set `NO_COLOR=1` to turn colours off entirely.
+
 ### REPL
 
 Running `marex` without a file starts an interactive session. Statements run as

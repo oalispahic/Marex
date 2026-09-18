@@ -6,6 +6,7 @@
 #include "../include/cli.hpp"
 #include "../include/repl.hpp"
 #include "../include/runtime.hpp"
+#include "../include/style.hpp"
 #include "version.hpp"
 
 int main(int argc, char** argv){
@@ -13,7 +14,8 @@ int main(int argc, char** argv){
     const CliOptions &options = parsed.options;
 
     if (!parsed.error.empty()) {
-        std::cerr << "marex: " << parsed.error << "\n\n" << cli_usage();
+        style::printError("marex: " + parsed.error);
+        std::cerr << '\n' << cli_usage();
         return EXIT_USAGE_ERROR;
     }
 
@@ -23,7 +25,7 @@ int main(int argc, char** argv){
     }
 
     if (options.show_version) {
-        std::cout << "Marex " << MAREX_VERSION_STRING << '\n';
+        std::cout << style::out().accentBold("Marex") << ' ' << MAREX_VERSION_STRING << '\n';
         return EXIT_OK;
     }
 

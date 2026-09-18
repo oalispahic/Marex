@@ -12,12 +12,13 @@
 #include "../include/parser.hpp"
 #include "../include/interpreter.hpp"
 #include "../include/repl.hpp"
+#include "../include/style.hpp"
 #include "version.hpp"
 
 namespace {
 
-const char *const PRIMARY_PROMPT = ">>> ";
-const char *const CONTINUATION_PROMPT = "... ";
+std::string primary_prompt() { return style::out().accentBold(">>>") + " "; }
+std::string continuation_prompt() { return style::out().dim("...") + " "; }
 
 bool stdin_is_terminal() {
     return isatty(STDIN_FILENO) != 0;
@@ -165,20 +166,41 @@ ReadResult read_repl_line(const std::string &prompt, const std::vector<std::stri
 }
 
 void print_help() {
-    std::cout << "Commands:\n"
-              << "  :help    Show this message\n"
-              << "  :info    List defined functions and variables (type, value, memory use)\n"
-              << "  :reset   Forget all variables\n"
-              << "  :clear   Clear the screen\n"
-              << "  :exit    Leave the REPL (also Ctrl-D)\n"
-              << "Ctrl-C cancels the statement being typed.\n"
-              << "Multi-line statements (if/loop) run once the closing fi/done is entered.\n";
+    const style::Styler &s = style::out();
+    std::cout << s.bold("Commands:") << '\n'
+              << "  " << s.accent(":help ") << "   Show this message\n"
+              << "  " << s.accent(":info ") << "   List defined functions and variables (type, value, memory use)\n"
+              << "  " << s.accent(":reset") << "   Forget all variables and functions\n"
+              << "  " << s.accent(":clear") << "   Clear the screen\n"
+              << "  " << s.accent(":exit ") << "   Leave the REPL (also Ctrl-D)\n"
+              << s.dim("Ctrl-C cancels the statement being typed.") << '\n'
+              << s.dim("Multi-line statements (if/loop/fun) run once the closing fi/done/ret is entered.") << '\n';
 }
 
 void print_banner() {
     clear_terminal();
-    std::cout << "Marex " << MAREX_VERSION_STRING << " REPL\n"
-              << "Type :help for commands, :exit to leave.\n";
+    const style::Styler &s = style::out();
+    std::cout << s.accentBold("Marex") << ' ' << MAREX_VERSION_STRING << " REPL\n"
+              << s.dim("Type :help for commands, :exit to leave.") << '\n';
+}
+
+// Pads plain text to a column width before any colour is applied, since
+// escape codes would otherwise count towards the width.
+std::string pad(const std::string &text, size_t width) {
+    return text.size() >= width ? text : text + std::string(width - text.size(), ' ');
+}
+
+// Colour for a type name in :info.
+std::string styled_type(Type type) {
+    const style::Styler &s = style::out();
+    const std::string name = typeName(type);
+    switch (type) {
+        case Type::INT:
+        case Type::FLOAT: return s.cyan(name);
+        case Type::STRING: return s.green(name);
+        case Type::NaN: return s.yellow(name);
+    }
+    return name;
 }
 
 // Approximate heap + inline footprint of one variable entry.
@@ -207,15 +229,16 @@ void print_functions(const Interpreter &interpreter) {
     for (const auto &entry: functions) names.push_back(entry.first);
     std::sort(names.begin(), names.end());
 
-    std::cout << "Functions:\n";
+    const style::Styler &s = style::out();
+    std::cout << s.bold("Functions:") << '\n';
     for (const std::string &name: names) {
         const Function &function = *functions.at(name);
-        std::cout << "  " << name << "(";
+        std::cout << "  " << s.accent(name) << "(";
         for (size_t i = 0; i < function.parameters.size(); ++i) {
             if (i) std::cout << ", ";
             std::cout << function.parameters[i];
         }
-        std::cout << ")" << (function.returnValue ? "" : "  [void]") << '\n';
+        std::cout << ")" << (function.returnValue ? "" : s.dim("  [void]")) << '\n';
     }
 }
 
@@ -237,24 +260,24 @@ void print_info(const Interpreter &interpreter) {
     }
     std::sort(names.begin(), names.end());
 
-    const int valueWidth = 24;
-    std::cout << std::left << std::setw(static_cast<int>(nameWidth) + 2) << "name"
-              << std::setw(8) << "type" << std::setw(valueWidth) << "value" << "bytes\n";
+    const style::Styler &s = style::out();
+    const size_t valueWidth = 24;
+    std::cout << s.dim(pad("name", nameWidth + 2) + pad("type", 8) + pad("value", valueWidth) + "bytes") << '\n';
 
     size_t totalBytes = 0;
     for (const std::string &name: names) {
         const Value &value = variables.at(name);
         std::string shown = display_value(value);
-        if (shown.size() > static_cast<size_t>(valueWidth - 2)) shown = shown.substr(0, valueWidth - 5) + "...";
+        if (shown.size() > valueWidth - 2) shown = shown.substr(0, valueWidth - 5) + "...";
 
         const size_t bytes = approx_bytes(name, value);
         totalBytes += bytes;
-        std::cout << std::left << std::setw(static_cast<int>(nameWidth) + 2) << name
-                  << std::setw(8) << typeName(value.type) << std::setw(valueWidth) << shown
-                  << bytes << '\n';
+        std::cout << pad(name, nameWidth + 2)
+                  << styled_type(value.type) << pad("", 8 - std::string(typeName(value.type)).size())
+                  << pad(shown, valueWidth) << bytes << '\n';
     }
-    std::cout << variables.size() << " variable" << (variables.size() == 1 ? "" : "s")
-              << ", about " << totalBytes << " bytes\n";
+    std::cout << s.dim(std::to_string(variables.size()) + " variable" + (variables.size() == 1 ? "" : "s") +
+                       ", about " + std::to_string(totalBytes) + " bytes") << '\n';
 }
 
 // Handles a ':' command. Returns false if the REPL should stop.
@@ -278,7 +301,7 @@ void run_buffered(Interpreter &interpreter, const std::vector<Token> &tokens) {
         interpreter.run(program.get());
     } catch (const std::exception &e) {
         interpreter.finishLine();
-        std::cerr << e.what() << '\n';
+        style::printError(e.what());
     }
     interpreter.finishLine();
 }
@@ -293,7 +316,7 @@ void repl() {
     print_banner();
 
     while (true) {
-        const std::string prompt = bufferedProgram.empty() ? PRIMARY_PROMPT : CONTINUATION_PROMPT;
+        const std::string prompt = bufferedProgram.empty() ? primary_prompt() : continuation_prompt();
         const ReadResult input = read_repl_line(prompt, history);
 
         if (input.kind == ReadResult::END_OF_INPUT) break;
@@ -327,5 +350,5 @@ void repl() {
         bufferedProgram.clear();
     }
 
-    if (stdin_is_terminal()) std::cout << "Bye.\n";
+    if (stdin_is_terminal()) std::cout << style::out().dim("Bye.") << '\n';
 }

@@ -28,6 +28,7 @@ add_executable(marex
         src/parser.cpp
         src/interpreter.cpp
         src/values_types.cpp
+        src/style.cpp
 )
 
 target_include_directories(marex PRIVATE
