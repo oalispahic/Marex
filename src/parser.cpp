@@ -300,15 +300,17 @@ Expr *Parser::parseLogicAnd() {
 Expr *Parser::parseLogicEqual() {
     Expr *expr = parseCompare();
 
-    while (match_advance(TokenType::EQUAL)) {
-        Expr *right = parseCompare();
-        expr = new BinaryExpr(expr, right, BinaryOperationType::EQ);
+    while (true) {
+        if (match_advance(TokenType::EQUAL)) {
+            Expr *right = parseCompare();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::EQ);
+        } else if (match_advance(TokenType::NOT_EQ)) {
+            Expr *right = parseCompare();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::NOT_EQ);
+        } else {
+            return expr;
+        }
     }
-    while (match_advance(TokenType::NOT_EQ)) {
-        Expr *right = parseCompare();
-        expr = new BinaryExpr(expr, right, BinaryOperationType::NOT_EQ);
-    }
-    return expr;
 }
 
 Expr *Parser::parseCompare() {
@@ -318,14 +320,13 @@ Expr *Parser::parseCompare() {
         if (match_advance(TokenType::LESS)) {
             Expr *right = parseTerm();
             expr = new BinaryExpr(expr, right, BinaryOperationType::LT);
-        }
-
-        if (match_advance(TokenType::GREATER)) {
+        } else if (match_advance(TokenType::GREATER)) {
             Expr *right = parseTerm();
             expr = new BinaryExpr(expr, right, BinaryOperationType::GT);
-        } else break;
+        } else {
+            return expr;
+        }
     }
-    return expr;
 }
 
 Expr *Parser::parseTerm() {
@@ -335,13 +336,13 @@ Expr *Parser::parseTerm() {
         if (match_advance(TokenType::PLUS)) {
             Expr *right = parseFactor();
             expr = new BinaryExpr(expr, right, BinaryOperationType::ADD);
-        }
-        if (match_advance(TokenType::MINUS)) {
+        } else if (match_advance(TokenType::MINUS)) {
             Expr *right = parseFactor();
             expr = new BinaryExpr(expr, right, BinaryOperationType::SUB);
-        } else break;
+        } else {
+            return expr;
+        }
     }
-    return expr;
 }
 
 Expr *Parser::parseFactor() {
@@ -351,13 +352,13 @@ Expr *Parser::parseFactor() {
         if (match_advance(TokenType::MULTIPLY)) {
             Expr *right = parseUnary();
             expr = new BinaryExpr(expr, right, BinaryOperationType::MUL);
-        }
-        if (match_advance(TokenType::DIVISION)) {
+        } else if (match_advance(TokenType::DIVISION)) {
             Expr *right = parseUnary();
             expr = new BinaryExpr(expr, right, BinaryOperationType::DIV);
-        } else break;
+        } else {
+            return expr;
+        }
     }
-    return expr;
 }
 
 Expr *Parser::parseUnary() {
