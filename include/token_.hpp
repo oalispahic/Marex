@@ -40,4 +40,7 @@ struct Token {
     int token_line;   // 1-based source line the token starts on
 };
 
+// Upper-case name of a token type, e.g. "IDENT", for diagnostics.
+const char *tokenTypeName(TokenType type);
+
 #endif //MAREX_TOKEN_HPP

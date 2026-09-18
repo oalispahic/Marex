@@ -1,6 +1,48 @@
 #include "../include/lexer.hpp"
 #include <cctype>
 
+const char *tokenTypeName(TokenType type) {
+    switch (type) {
+        case TokenType::VAR: return "VAR";
+        case TokenType::PRINT: return "PRINT";
+        case TokenType::IF: return "IF";
+        case TokenType::ELSE: return "ELSE";
+        case TokenType::FI: return "FI";
+        case TokenType::LOOP: return "LOOP";
+        case TokenType::DONE: return "DONE";
+        case TokenType::STEP: return "STEP";
+        case TokenType::FUN: return "FUN";
+        case TokenType::SYS: return "SYS";
+        case TokenType::ASSIGN: return "ASSIGN";
+        case TokenType::ARROW: return "ARROW";
+        case TokenType::PLUS: return "PLUS";
+        case TokenType::PLUSPLUS: return "PLUSPLUS";
+        case TokenType::MINUS: return "MINUS";
+        case TokenType::MULTIPLY: return "MULTIPLY";
+        case TokenType::DIVISION: return "DIVISION";
+        case TokenType::LESS: return "LESS";
+        case TokenType::GREATER: return "GREATER";
+        case TokenType::EQUAL: return "EQUAL";
+        case TokenType::NOT_EQ: return "NOT_EQ";
+        case TokenType::AND: return "AND";
+        case TokenType::OR: return "OR";
+        case TokenType::L_PAR: return "L_PAR";
+        case TokenType::R_PAR: return "R_PAR";
+        case TokenType::L_BRACKET: return "L_BRACKET";
+        case TokenType::R_BRACKET: return "R_BRACKET";
+        case TokenType::DOT: return "DOT";
+        case TokenType::SEMICOLON: return "SEMICOLON";
+        case TokenType::NEWLN: return "NEWLN";
+        case TokenType::IDENT: return "IDENT";
+        case TokenType::NUMBER: return "NUMBER";
+        case TokenType::FLOAT: return "FLOAT";
+        case TokenType::STRING: return "STRING";
+        case TokenType::END_OF_FILE: return "END_OF_FILE";
+        case TokenType::ERR: return "ERR";
+    }
+    return "UNKNOWN";
+}
+
 char Lexer::peek() {
     if (curr + 1 >= file.size()) return '\0';
     return file[curr + 1];
