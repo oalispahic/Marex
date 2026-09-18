@@ -3,6 +3,7 @@
 //
 #include <string>
 #include <vector>
+#include <stdexcept>
 #include "../include/token_.hpp"
 #include "../include/parser.hpp"
 #include "../include/ast_nodes.hpp"
@@ -124,60 +125,93 @@ Statement *Parser::parseIf() {
 }
 
 Statement *Parser::parseLoop() {
-    //range loop check and parse
+    if (check_valid_type(TokenType::L_PAR)) return parseFor();
+    return parseRange();
+}
 
-    if (check_valid_type(TokenType::L_PAR)) {
-        next();
-
-
-        if (check_valid_type(TokenType::IDENT) && tokens[current_token + 1].type == TokenType::ARROW) {
-            Token start_ident = next();
-            consume(TokenType::ARROW, "Expected '->' in range loop. ");
-            Token end_ident = consume(TokenType::IDENT, "Expected identifier after '->' in range loop. ");
-            consume(TokenType::R_PAR, "Expected closing ')' bracket in loop. ");
-            RangeLoop_ST *rangeLoop = new RangeLoop_ST(start_ident.val, end_ident.val);
-
-            while (!check_valid_type(TokenType::DONE) && !isEnd()) {
-                Statement *statements = parseStatement();
-                rangeLoop->LoopBody.push_back(statements);
-            }
-            consume(TokenType::DONE, "Expected 'done' after loop body. ");
-            return rangeLoop;
-        }
-
-
-        Statement *initial = nullptr;
-        if (check_valid_type(TokenType::VAR)) {
-            next();
-            initial = parseVarDeclaration();
-        } else if (check_valid_type(TokenType::IDENT)) Token identifier = next();
-
-        consume(TokenType::SEMICOLON, "Expected ';' after loop initialisation. ");
-
-        Expr *condition = parseExpr();
-
-        consume(TokenType::SEMICOLON, "Expected ';' after loop condiiton. ");
-
-        Statement *counter = nullptr;
-
-        if (check_valid_type(TokenType::IDENT)) {
-            counter = parseAssign();
-        } else {
-            throw std::runtime_error("Expected assignment for loop increment. ");
-        }
-
-        consume(TokenType::R_PAR, "Expected closing ')' for loop header. ");
-
-        Loop_ST *forLoop = new Loop_ST(initial, condition, counter);
-
-        while (!check_valid_type(TokenType::DONE) && !isEnd()) {
-            Statement *statement = parseStatement();
-            forLoop->LoopBody.push_back(statement);
-        }
-        consume(TokenType::DONE, "Expected 'done' after loop body. ");
-        return forLoop;
+Statement *Parser::parseRange() {
+    Expr *start = parseRangeValue();
+    if (!start) {
+        throw std::runtime_error("Expected start value or variable in range loop. ");
     }
-    throw std::runtime_error("Expected '(' after loop. ");
+
+    consume(TokenType::ARROW, "Expected '->' in range loop. ");
+
+    Expr *end = parseRangeValue();
+    if (!end) {
+        delete start;
+        throw std::runtime_error("Expected end value or variable in range loop. ");
+    }
+
+    Expr *step = nullptr;
+    if (match_advance(TokenType::STEP)) {
+        step = parseRangeValue();
+        if (!step) {
+            delete start;
+            delete end;
+            throw std::runtime_error("Expected step value or variable in range loop. ");
+        }
+    }
+
+    RangeLoop_ST *rangeLoop = new RangeLoop_ST(start, end, step);
+    while (!check_valid_type(TokenType::DONE) && !isEnd()) {
+        Statement *statements = parseStatement();
+        rangeLoop->LoopBody.push_back(statements);
+    }
+    consume(TokenType::DONE, "Expected 'done' after loop body. ");
+    return rangeLoop;
+}
+
+Expr *Parser::parseRangeValue() {
+    if (check_valid_type(TokenType::IDENT)) {
+        return new IdentExpr(next().val);
+    }
+
+    bool negative = false;
+    if (match_advance(TokenType::MINUS)) {
+        negative = true;
+    }
+
+    if (check_valid_type(TokenType::NUMBER)) {
+        int parsed = std::stoi(next().val);
+        return new NumExpr(negative ? -parsed : parsed);
+    }
+    return nullptr;
+}
+
+Statement *Parser::parseFor() {
+    consume(TokenType::L_PAR, "Expected '(' after loop for c-style loop. ");
+
+    Statement *initial = nullptr;
+    if (check_valid_type(TokenType::VAR)) {
+        next();
+        initial = parseVarDeclaration();
+    } else if (check_valid_type(TokenType::IDENT)) {
+        initial = parseAssign();
+    }
+
+    consume(TokenType::SEMICOLON, "Expected ';' after loop initialisation. ");
+    Expr *condition = parseExpr();
+    consume(TokenType::SEMICOLON, "Expected ';' after loop condition. ");
+
+    Statement *counter = nullptr;
+    if (check_valid_type(TokenType::IDENT)) {
+        counter = parseAssign();
+    } else {
+        delete initial;
+        delete condition;
+        throw std::runtime_error("Expected assignment for loop increment. ");
+    }
+
+    consume(TokenType::R_PAR, "Expected closing ')' for loop header. ");
+    Loop_ST *forLoop = new Loop_ST(initial, condition, counter);
+
+    while (!check_valid_type(TokenType::DONE) && !isEnd()) {
+        Statement *statement = parseStatement();
+        forLoop->LoopBody.push_back(statement);
+    }
+    consume(TokenType::DONE, "Expected 'done' after loop body. ");
+    return forLoop;
 }
 
 Expr *Parser::parseExpr() {

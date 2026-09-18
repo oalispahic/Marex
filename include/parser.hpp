@@ -43,6 +43,8 @@ private:
 
     Statement *parseFor();
 
+    Expr *parseRangeValue();
+
     //---------PARSE EXPR----------
 
     Expr *parseExpr();

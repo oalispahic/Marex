@@ -129,13 +129,17 @@ struct Loop_ST : Statement {
 };
 
 struct RangeLoop_ST : Statement {
-    std::string start;
-    std::string end;
+    Expr *start;
+    Expr *end;
+    Expr *step;
     std::vector<Statement *> LoopBody;
 
-    RangeLoop_ST(std::string &st, std::string &end) : start(st), end(end) {}
+    RangeLoop_ST(Expr *st, Expr *en, Expr *stp) : start(st), end(en), step(stp) {}
 
     ~RangeLoop_ST() override {
+        delete start;
+        delete end;
+        if (step) delete step;
         for (auto &del: LoopBody) delete del;
     }
 };

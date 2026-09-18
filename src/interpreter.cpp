@@ -135,17 +135,50 @@ void Interpreter::execStatement(Statement *statement) {
     }
 
     if (auto loop = dynamic_cast<RangeLoop_ST *>(statement)) {
-        if (!global_scope.count(loop->start) || !global_scope.count(loop->end)) {
-            throw std::runtime_error("Start and end vars not declared");
+        Value startValue = evalExpr(loop->start);
+        Value endValue = evalExpr(loop->end);
+
+        if (startValue.type != Type::INT || endValue.type != Type::INT) {
+            throw std::runtime_error("Range loop supports integer start/end values only. ");
         }
-        int start = global_scope[loop->start].integer_value;
-        int end = global_scope[loop->end].integer_value;
-        for (int i = start; i < end; i++) {
-            for (auto body: loop->LoopBody) {
-                execStatement(body);
+
+        int start = startValue.integer_value;
+        int end = endValue.integer_value;
+        int step = 0;
+
+        if (loop->step) {
+            Value stepValue = evalExpr(loop->step);
+            if (stepValue.type != Type::INT) {
+                throw std::runtime_error("Range loop step must be an integer value. ");
+            }
+            step = stepValue.integer_value;
+        } else {
+            step = (start < end) ? 1 : -1;
+        }
+
+        if (step == 0) {
+            throw std::runtime_error("Range loop step cannot be 0. ");
+        }
+
+        if ((start < end && step < 0) || (start > end && step > 0)) {
+            throw std::runtime_error("Range loop step direction does not match start/end values. ");
+        }
+
+        if (start < end) {
+            for (int i = start; i < end; i += step) {
+                for (auto body: loop->LoopBody) {
+                    execStatement(body);
+                }
+            }
+        } else if (start > end) {
+            for (int i = start; i > end; i += step) {
+                for (auto body: loop->LoopBody) {
+                    execStatement(body);
+                }
             }
         }
-    return;
+
+        return;
     }
     throw std::runtime_error("Unknown statement ");
 }
