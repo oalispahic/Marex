@@ -25,8 +25,12 @@ add_executable(Marex
         src/lexer.cpp
         src/interpreter.cpp
         src/cli.cpp
+        src/runtime.cpp
+        src/repl.cpp
         test_program/testing.cpp
         src/main.cpp
         include/values_types.hpp
+        include/runtime.hpp
+        include/repl.hpp
         src/values_types.cpp
 )

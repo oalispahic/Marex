@@ -3,105 +3,47 @@
 //
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include "../include/lexer.hpp"
-#include "../include/parser.hpp"
-#include "../include/interpreter.hpp"
 #include "../include/cli.hpp"
+#include "../include/repl.hpp"
+#include "../include/runtime.hpp"
 #include "../include/version.hpp.in"
 
-
-void clear_terminal(){
-#if defined(_WIN32) || defined(__MINGW32__) || defined(__CYGWIN__)
-    system("cls");
-#else
-    system("clear");
-#endif
-}
-void compile_and_run(const std::string &source, const std::vector<std::string>& args){
-    try{
-        Lexer lexer(source);
-        auto tokens = lexer.tokenize();
-
-        Parser parser(tokens);
-        auto program = parser.parse();
-
-        Interpreter interpreter(args);
-        interpreter.run(program);
-    }
-    catch(const std::exception &e){
-        std::cerr<<e.what()<<'\n';
-        return;
-    }
+namespace {
+int handle_cli_errors(const CliParseResult &parsed) {
+    if (parsed.error.empty()) return 0;
+    std::cerr << parsed.error << '\n';
+    std::cerr << cli_usage();
+    return 1;
 }
 
-void repl(){
-    std::string line;
-    std::string program;
-    clear_terminal();
-    std::cout<<"Welcome to Marex REPL (type :run to execute, :exit to quit, :clear to clear terminal)\n";
-
-    while(true){
-        std::cout<<"marex> ";
-        std::getline(std::cin,line);
-
-        if (line ==":clear") {
-            clear_terminal();
-            line.clear();
-        }
-        if(line==":exit"){
-            std::cout<<'\n'<<"Quit!"<<'\n';
-            break;
-        }
-        if(line == ":run"){
-            compile_and_run(program, {});
-            std::cout<<'\n';
-            program.clear();
-            continue;
-        }
-
-        program += line + "\n";
-    }
-}
-
-
-int main(int argc, char** argv){
-
-    CliParseResult parsed = parse_cli(argc, argv);
-    if (!parsed.error.empty()) {
-        std::cerr << parsed.error << '\n';
-        std::cerr << cli_usage();
-        return 1;
-    }
-
+bool handle_meta_options(const CliParseResult &parsed) {
     if (parsed.options.show_version) {
         std::cout << "Marex " << MAREX_VERSION_STRING << '\n';
-        return 0;
+        return true;
     }
 
     if (parsed.options.show_help) {
         std::cout << cli_usage();
-        return 0;
+        return true;
     }
 
     if (parsed.options.repl) {
         repl();
-        return 0;
+        return true;
     }
 
-    std::ifstream file(parsed.options.file);
-    if(!file){
-        std::cerr<<"Error opening file "<<parsed.options.file<<'\n';
-        return 1;
-    }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string source = buffer.str();
+    return false;
+}
+} // namespace
 
-    compile_and_run(source, parsed.options.script_args);
-    source.clear();
+int main(int argc, char** argv){
+    CliParseResult parsed = parse_cli(argc, argv);
+    const int cliError = handle_cli_errors(parsed);
+    if (cliError != 0) return cliError;
+
+    if (handle_meta_options(parsed)) return 0;
+
+    execute_script_file(parsed.options.file, parsed.options.script_args);
     std::cout<<'\n';
-
     return 0;
 }
