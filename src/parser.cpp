@@ -34,7 +34,15 @@ bool Parser::match_advance(TokenType type) {
 
 const Token &Parser::consume(TokenType type, const std::string &err_msg) {
     if (check_valid_type(type)) return next();
-    throw std::runtime_error("Line " + std::to_string(peek().token_line) + ": " + err_msg);
+    failAtCurrent(err_msg);
+}
+
+// Throws a syntax error for the current token. Lexer error tokens carry
+// their own message, which is more useful than what the parser expected.
+void Parser::failAtCurrent(const std::string &err_msg) const {
+    const Token &token = peek();
+    const std::string message = token.type == TokenType::ERR ? token.val : err_msg;
+    throw std::runtime_error("Line " + std::to_string(token.token_line) + ": " + message);
 }
 
 
@@ -398,5 +406,5 @@ Expr *Parser::parsePrimary() {
         consume(TokenType::R_PAR, "Expected ')' after expression. ");
         return expr;
     }
-    throw std::runtime_error("Line " + std::to_string(peek().token_line) + ": Expected expression");
+    failAtCurrent("Expected expression");
 }

@@ -206,7 +206,7 @@ std::vector<Token> Lexer::tokenize() {
                 tokens.push_back({TokenType::DOT, ".", line});
                 break;;
             default:
-                tokens.push_back({TokenType::ERR, std::string(1, current()), line});
+                tokens.push_back({TokenType::ERR, "Unexpected character '" + std::string(1, current()) + "'", line});
                 break;
 
         }

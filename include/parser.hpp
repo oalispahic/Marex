@@ -87,6 +87,8 @@ private:
     bool match_advance(TokenType type);
 
     const Token& consume(TokenType type, const std::string &err_msg);
+
+    [[noreturn]] void failAtCurrent(const std::string &err_msg) const;
 };
 
 #endif //MAREX_PARSER_HPP
