@@ -1,36 +1,45 @@
-cmake_minimum_required(VERSION 3.28)
-project(Marex VERSION 1.0.0)
+cmake_minimum_required(VERSION 3.16)
+project(Marex VERSION 1.1.0 LANGUAGES CXX
+        DESCRIPTION "A tiny interpreted, dynamically typed language")
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+# Single source of truth for the version is project() above; the header
+# is generated so the binary always reports the version it was built from.
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/include/version.hpp.in
         ${CMAKE_CURRENT_BINARY_DIR}/generated/version.hpp
         @ONLY
 )
 
-include_directories(.)
-include_directories(Lexer)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/generated)
-
-add_executable(Marex
-        include/token_.hpp
-        include/lexer.hpp
-        include/ast_nodes.hpp
-        include/parser.hpp
-
-        include/interpreter.hpp
-        include/cli.hpp
-        src/parser.cpp
-        src/lexer.cpp
-        src/interpreter.cpp
+add_executable(marex
+        src/main.cpp
         src/cli.cpp
         src/runtime.cpp
         src/repl.cpp
-        test_program/testing.cpp
-        src/main.cpp
-        include/values_types.hpp
-        include/runtime.hpp
-        include/repl.hpp
+        src/lexer.cpp
+        src/parser.cpp
+        src/interpreter.cpp
         src/values_types.cpp
 )
+
+target_include_directories(marex PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_BINARY_DIR}/generated
+)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(marex PRIVATE -Wall -Wextra)
+endif()
+
+install(TARGETS marex RUNTIME DESTINATION bin)
+
+enable_testing()
+add_subdirectory(tests)

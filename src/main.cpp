@@ -6,7 +6,7 @@
 #include "../include/cli.hpp"
 #include "../include/repl.hpp"
 #include "../include/runtime.hpp"
-#include "../include/version.hpp.in"
+#include "version.hpp"
 
 namespace {
 int handle_cli_errors(const CliParseResult &parsed) {

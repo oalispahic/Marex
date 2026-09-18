@@ -7,7 +7,7 @@
 #include "../include/parser.hpp"
 #include "../include/interpreter.hpp"
 #include "../include/repl.hpp"
-#include "../include/version.hpp.in"
+#include "version.hpp"
 
 namespace {
 void clear_terminal() {
