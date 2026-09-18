@@ -8,6 +8,9 @@
 #include "../include/runtime.hpp"
 
 bool execute_source_once(const std::string &source, const std::vector<std::string> &args) {
+    Interpreter interpreter(args);
+    bool ok = true;
+
     try {
         Lexer lexer(source);
         auto tokens = lexer.tokenize();
@@ -15,13 +18,19 @@ bool execute_source_once(const std::string &source, const std::vector<std::strin
         Parser parser(tokens);
         std::unique_ptr<Program> program(parser.parse());
 
-        Interpreter interpreter(args);
         interpreter.run(program.get());
     } catch (const std::exception &e) {
+        if (!interpreter.atLineStart()) std::cout << '\n';
+        std::cout.flush();
         std::cerr << e.what() << '\n';
-        return false;
+        ok = false;
     }
-    return true;
+
+    // Leave the terminal on a fresh line, but do not add a blank one
+    // after programs that already ended their output with newln.
+    if (!interpreter.atLineStart()) std::cout << '\n';
+    std::cout.flush();
+    return ok;
 }
 
 bool execute_script_file(const std::string &file_path, const std::vector<std::string> &args) {

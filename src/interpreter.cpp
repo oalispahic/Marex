@@ -92,20 +92,24 @@ void Interpreter::execStatement(Statement *statement) {
 
     if (auto print = dynamic_cast<Print_ST *>(statement)) {
         Value val = evalExpr(print->print_value);
-        if (val.type == Type::INT)
+        if (val.type == Type::INT) {
             std::cout << val.integer_value;
-        else if (val.type == Type::FLOAT)
+            at_line_start = false;
+        } else if (val.type == Type::FLOAT) {
             std::cout << val.float_value;
-        else if(val.type == Type::STRING && val.stringValue == "\n")
+            at_line_start = false;
+        } else if (val.type == Type::STRING && !val.stringValue.empty()) {
             std::cout << val.stringValue;
-        else if (val.type == Type::STRING)
-            std::cout << val.stringValue;
+            at_line_start = val.stringValue.back() == '\n';
+        }
         return;
     }
 
     if (auto system_statement = dynamic_cast<System_ST *>(statement)) {
+        std::cout.flush();
         std::string statement = system_statement->system_statement;
         system(statement.c_str());
+        at_line_start = true;
         return;
     }
 

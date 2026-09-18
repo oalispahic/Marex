@@ -15,11 +15,17 @@
 
 class Interpreter{
     std::unordered_map<std::string,Value> global_scope;
+    bool at_line_start = true;
 
 public:
     explicit Interpreter(const std::vector<std::string>& args = {});
     void run(Program* prog);
     void set_args(const std::vector<std::string>& args);
+
+    // True when the last thing written to stdout ended with a newline
+    // (or nothing was written yet). Lets callers finish a dangling line
+    // without adding blank lines after programs that end with newln.
+    bool atLineStart() const { return at_line_start; }
 
 private:
     void execStatement(Statement* statement);

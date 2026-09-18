@@ -170,10 +170,13 @@ void repl() {
             std::unique_ptr<Program> parsedProgram(parser.parse());
             interpreter.run(parsedProgram.get());
         } catch (const std::exception &e) {
+            if (!interpreter.atLineStart()) std::cout << '\n';
+            std::cout.flush();
             std::cerr << e.what() << '\n';
         }
 
-        std::cout << '\n';
+        if (!interpreter.atLineStart()) std::cout << '\n';
+        std::cout.flush();
         bufferedProgram.clear();
     }
 }

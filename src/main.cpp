@@ -44,6 +44,5 @@ int main(int argc, char** argv){
     if (handle_meta_options(parsed)) return 0;
 
     execute_script_file(parsed.options.file, parsed.options.script_args);
-    std::cout<<'\n';
     return 0;
 }
