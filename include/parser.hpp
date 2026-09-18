@@ -52,6 +52,8 @@ private:
 
     Expr *parseRangeValue();
 
+    bool isRangeHeader() const;
+
     //---------PARSE EXPR----------
 
     Expr *parseExpr();

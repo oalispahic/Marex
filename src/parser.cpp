@@ -194,11 +194,23 @@ Statement *Parser::parseIf() {
 }
 
 Statement *Parser::parseLoop() {
-    if (check_valid_type(TokenType::L_PAR)) return parseFor();
-    return parseRange();
+    if (isRangeHeader()) return parseRange();
+    return parseFor();
+}
+
+// A range loop header is '[(] [-]value -> ...'; anything else after
+// 'loop' is treated as a C-style header.
+bool Parser::isRangeHeader() const {
+    size_t i = current_token;
+    if (tokens[i].type == TokenType::L_PAR) ++i;
+    if (tokens[i].type == TokenType::MINUS) ++i;
+    if (tokens[i].type != TokenType::IDENT && tokens[i].type != TokenType::NUMBER) return false;
+    return tokens[i + 1].type == TokenType::ARROW;
 }
 
 Statement *Parser::parseRange() {
+    const bool parenthesized = match_advance(TokenType::L_PAR);
+
     Expr *start = parseRangeValue();
     if (!start) {
         throw std::runtime_error("Expected start value or variable in range loop. ");
@@ -219,6 +231,17 @@ Statement *Parser::parseRange() {
             delete start;
             delete end;
             throw std::runtime_error("Expected step value or variable in range loop. ");
+        }
+    }
+
+    if (parenthesized) {
+        try {
+            consume(TokenType::R_PAR, "Expected closing ')' after range loop header. ");
+        } catch (...) {
+            delete start;
+            delete end;
+            delete step;
+            throw;
         }
     }
 
