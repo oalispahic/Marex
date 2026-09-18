@@ -1,8 +1,8 @@
 {
   "name": "marex-lang",
   "displayName": "Marex Language",
-  "description": "Syntax highlighting, snippets and a formatter for the Marex language (.mx)",
-  "version": "0.1.0",
+  "description": "Syntax highlighting, file icons, snippets, a formatter and run commands for the Marex language (.mx)",
+  "version": "0.2.0",
   "publisher": "oalispahic",
   "license": "MIT",
   "repository": {
@@ -25,7 +25,9 @@
   ],
   "main": "./extension.js",
   "activationEvents": [
-    "onLanguage:marex"
+    "onLanguage:marex",
+    "onCommand:marex.runFile",
+    "onCommand:marex.openRepl"
   ],
   "contributes": {
     "languages": [
@@ -38,7 +40,11 @@
         "extensions": [
           ".mx"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/mx-light.svg",
+          "dark": "./icons/mx-dark.svg"
+        }
       }
     ],
     "grammars": [
@@ -61,12 +67,82 @@
           "type": "boolean",
           "default": true,
           "description": "Collapse runs of blank lines into a single blank line when formatting."
+        },
+        "marex.executablePath": {
+          "type": "string",
+          "default": "marex",
+          "description": "Path to the marex executable. Defaults to \"marex\" on PATH."
+        },
+        "marex.run.saveBeforeRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Save the file before running it."
+        },
+        "marex.run.arguments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Arguments passed to the script (available as ARGC and ARGV0, ARGV1, ...)."
         }
       }
-    }
+    },
+    "commands": [
+      {
+        "command": "marex.runFile",
+        "title": "Run File",
+        "category": "Marex",
+        "icon": "$(play)"
+      },
+      {
+        "command": "marex.openRepl",
+        "title": "Open REPL",
+        "category": "Marex",
+        "icon": "$(terminal)"
+      }
+    ],
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "marex.runFile",
+          "when": "resourceLangId == marex",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "marex.runFile",
+          "when": "resourceLangId == marex",
+          "group": "marex@1"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "marex.runFile",
+          "when": "resourceExtname == .mx",
+          "group": "marex@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "marex.runFile",
+          "when": "resourceLangId == marex"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "marex.runFile",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r",
+        "when": "editorLangId == marex"
+      }
+    ]
   },
   "scripts": {
     "test": "node --test test/",
     "package": "npx @vscode/vsce package"
-  }
+  },
+  "icon": "icons/marex.png"
 }

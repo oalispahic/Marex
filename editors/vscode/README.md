@@ -3,7 +3,10 @@
 Language support for [Marex](../../README.md) `.mx` files:
 
 - syntax highlighting (keywords, strings, numbers, comments, function names,
-  `ARGC`/`ARGV*`, operators)
+  `ARGC`/`ARGV*`, operators) and an "MX" file icon for `.mx` files
+- **Marex: Run File** (play button in the editor title, right-click menu,
+  or `Ctrl+Alt+R` / `Cmd+Alt+R`) runs the current file in the integrated
+  terminal; **Marex: Open REPL** starts the interactive interpreter
 - a formatter (`Format Document`, or format on save) that re-indents
   `if/fi`, `loop/done`, `fun/ret` and `else` blocks and trims whitespace
 - comment toggling, bracket matching and auto-closing pairs
@@ -26,6 +29,19 @@ To build a `.vsix` instead:
 npx @vscode/vsce package
 code --install-extension marex-lang-*.vsix
 ```
+
+## Running
+
+`Marex: Run File` saves the file and runs `marex <file>` in a terminal named
+"Marex", reusing it between runs. Settings:
+
+- `marex.executablePath` (default `marex`): the interpreter to use. Set this
+  if `marex` is not on the PATH that VS Code's terminal sees.
+- `marex.run.arguments` (default `[]`): arguments passed to the script.
+- `marex.run.saveBeforeRun` (default `true`).
+
+The file icon is picked up by icon themes that show language icons, which
+includes the built-in Seti theme.
 
 ## Formatting
 
