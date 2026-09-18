@@ -1,0 +1,34 @@
+// Every loop form Marex supports.
+
+// C-style loop with 'i++' in the header
+loop (var i := 0; i < 3; i++)
+    print(i)
+    print(" ")
+done
+print(newln)
+
+// Range loop: bounds are literals or variables, direction is inferred
+loop 1 -> 4
+    print("up ")
+done
+print(newln)
+
+loop 3 -> 0
+    print("down ")
+done
+print(newln)
+
+// Optional step, optional parentheses around the header
+var start := 10
+loop (start -> 0 step -4)
+    print("step ")
+done
+print(newln)
+
+// Nested loops with a condition
+loop (var row := 1; row < 4; row++)
+    loop 0 -> row
+        print("*")
+    done
+    print(newln)
+done

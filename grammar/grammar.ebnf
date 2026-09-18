@@ -1,54 +1,63 @@
-PROGRAM		::= {STATEMENT}
+(* Marex grammar. Whitespace and newlines separate tokens but carry no
+   meaning; statements are not terminated by ';'.
+   Comments: "//" to end of line, or "/*" ... "*/" (may span lines).   *)
 
-STATEMENT      ::= VAR_DECL
-                 | ASSIGN
-                 | PRINT
-                 | IF_STMT
-                 | LOOP_STMT
-                 | EXPR_STMT
+PROGRAM         ::= { STATEMENT }
 
+STATEMENT       ::= VAR_DECL
+                  | ASSIGN
+                  | INCREMENT
+                  | PRINT
+                  | SYS
+                  | IF_STMT
+                  | LOOP_STMT
+                  | EXPR_STMT
 
+VAR_DECL        ::= "var" IDENT [ ":=" EXPR ]          (* no value: NaN *)
+ASSIGN          ::= IDENT ":=" EXPR
+INCREMENT       ::= IDENT "++"                         (* IDENT := IDENT + 1 *)
+PRINT           ::= "print" "(" EXPR ")"
+SYS             ::= "sys" "(" STRING ")"               (* run a shell command *)
+EXPR_STMT       ::= EXPR
 
-VAR_DECL	::= "var" IDENT ":=" EXPR
-ASSIGN 		::= IDENT ":=" EXPR
-PRINT 		::= "print" "(" EXPR ")"
+IF_STMT         ::= "if" "(" EXPR ")"
+                    { STATEMENT }
+                    [ "else" { STATEMENT } ]
+                    "fi"
 
-IF_STMT        ::= "if" "(" EXPR ")"
-                   { STATEMENT }
-                   [ "else" { STATEMENT } ]
-                   "fi"
+LOOP_STMT       ::= FOR_LOOP | RANGE_LOOP
 
+FOR_LOOP        ::= "loop" "(" [ VAR_DECL | ASSIGN ] ";" EXPR ";" ( ASSIGN | INCREMENT ) ")"
+                    { STATEMENT }
+                    "done"
 
-LOOP_STMT   ::= FOR_LOOP | RANGE_LOOP
+RANGE_LOOP      ::= "loop" ( RANGE | "(" RANGE ")" )
+                    { STATEMENT }
+                    "done"
 
-RANGE_LOOP     ::= "loop" "(" IDENT "->" IDENT ")"
-                   { STATEMENT }
-                   "done"
-
-
-FOR_LOOP       ::= "loop" "(" [ VAR_DECL ] ";" EXPR ";" ASSIGN ")"
-                   { STATEMENT }
-                   "done"
-
-
+RANGE           ::= RANGE_VALUE "->" RANGE_VALUE [ "step" RANGE_VALUE ]
+RANGE_VALUE     ::= [ "-" ] ( NUMBER | IDENT )
 
 EXPR            ::= LOGIC_OR
 
-LOGIC_OR        ::= LOGIC_AND { "or" LOGIC_AND }
-LOGIC_AND       ::= EQUALITY  { "and" EQUALITY }
-
-EQUALITY        ::= COMPARISON { ("==" | "!=") COMPARISON }
-
-COMPARISON      ::= TERM { ("<" | ">") TERM }
-
-TERM            ::= FACTOR { ("+" | "-") FACTOR }
-
-FACTOR          ::= UNARY { ("*" | "/") UNARY }
+LOGIC_OR        ::= LOGIC_AND { "|" LOGIC_AND }
+LOGIC_AND       ::= EQUALITY  { "&" EQUALITY }
+EQUALITY        ::= COMPARISON { ( "=" | "!=" ) COMPARISON }
+COMPARISON      ::= TERM { ( "<" | ">" ) TERM }
+TERM            ::= FACTOR { ( "+" | "-" ) FACTOR }
+FACTOR          ::= UNARY { ( "*" | "/" ) UNARY }
 
 UNARY           ::= "-" UNARY
                   | PRIMARY
 
 PRIMARY         ::= NUMBER
+                  | FLOAT
                   | STRING
                   | IDENT
+                  | "newln"                            (* the string "\n" *)
                   | "(" EXPR ")"
+
+NUMBER          ::= DIGIT { DIGIT }
+FLOAT           ::= DIGIT { DIGIT } "." DIGIT { DIGIT }
+STRING          ::= '"' { any character except '"' } '"'
+IDENT           ::= ( LETTER | "_" ) { LETTER | DIGIT | "_" }

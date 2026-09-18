@@ -9,12 +9,16 @@ function(marex_example_test name)
             -DMAREX=$<TARGET_FILE:marex>
             -DSCRIPT=${EXAMPLE_DIR}/${name}.mx
             -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/expected/${name}.txt
-            -DARGS=${ARGN}
+            "-DARGS=${ARGN}"
             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_example.cmake)
 endfunction()
 
 marex_example_test(fibb)
 marex_example_test(fact)
+marex_example_test(example)
+marex_example_test(loops)
+marex_example_test(types)
+marex_example_test(args one two)
 
 # CLI behaviour
 

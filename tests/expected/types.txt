@@ -1,0 +1,6 @@
+3
+3.5
+3.5
+Marex v1
+NaN
+strings compare by content

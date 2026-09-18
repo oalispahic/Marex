@@ -1,0 +1,30 @@
+/*
+   Dynamic typing: a variable can hold an int, a float, a string,
+   or nothing at all (NaN) until it is assigned.
+*/
+var x := 7
+var half := x / 2          // integer division
+print(half)
+print(newln)
+
+x := 7.0                   // now a float
+print(x / 2)
+print(newln)
+
+print(1.5 + 2)             // mixed arithmetic gives a float
+print(newln)
+
+var name := "Marex"
+print(name + " v" + 1)     // numbers can be joined onto strings
+print(newln)
+
+var empty
+print(empty)               // prints NaN
+print(newln)
+
+if (name = "Marex" & x > 6)
+    print("strings compare by content")
+else
+    print("unreachable")
+fi
+print(newln)
