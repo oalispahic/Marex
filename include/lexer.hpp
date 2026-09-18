@@ -13,11 +13,16 @@ class Lexer{
     size_t curr = 0;
     int line = 1;
     std::string file;
+    bool open_block_comment = false;
 
 public:
     explicit Lexer(const std::string &f) : file(f){}
 
     std::vector<Token> tokenize();
+
+    // True after tokenize() if the source ended inside a '/* ... */'
+    // comment. The REPL uses it to keep reading lines.
+    bool inOpenBlockComment() const { return open_block_comment; }
 
 private:
     char peek();

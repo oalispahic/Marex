@@ -30,7 +30,35 @@ std::vector<Token> Lexer::tokenize() {
             continue;
         }
 
+        if (current() == '/' && peek() == '/') {          // line comment
+            while (index() < file.size() && current() != '\n') consume();
+            continue;
+        }
+
+        if (current() == '/' && peek() == '*') {          // block comment
+            const int start_line = line;
+            consume();
+            consume();
+            bool closed = false;
+            while (index() < file.size()) {
+                if (current() == '*' && peek() == '/') {
+                    consume();
+                    consume();
+                    closed = true;
+                    break;
+                }
+                if (current() == '\n') line++;
+                consume();
+            }
+            if (!closed) {
+                open_block_comment = true;
+                tokens.push_back({TokenType::ERR, "Unterminated block comment", start_line});
+            }
+            continue;
+        }
+
         if (current() == '"') {
+            const int start_line = line;
             consume();
             std::string str;
             bool closed = false;
@@ -47,9 +75,9 @@ std::vector<Token> Lexer::tokenize() {
             }
 
             if (!closed)
-                tokens.push_back({TokenType::ERR, "Unterminated string", line});
+                tokens.push_back({TokenType::ERR, "Unterminated string", start_line});
             else
-                tokens.push_back({TokenType::STRING, str, line});
+                tokens.push_back({TokenType::STRING, str, start_line});
             continue;
         }
 

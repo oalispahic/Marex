@@ -150,6 +150,7 @@ void repl() {
 
         Lexer lexer(bufferedProgram);
         auto tokens = lexer.tokenize();
+        if (lexer.inOpenBlockComment()) continue;
         const ParseStatus status = Parser::getParseStatus(tokens);
 
         if (status == ParseStatus::WAIT) continue;
