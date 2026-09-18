@@ -36,16 +36,14 @@ int execute_source_once(const std::string &source, const std::vector<std::string
 
         interpreter.run(program.get());
     } catch (const std::exception &e) {
-        if (!interpreter.atLineStart()) std::cout << '\n';
-        std::cout.flush();
+        interpreter.finishLine();
         std::cerr << e.what() << '\n';
         status = EXIT_SCRIPT_ERROR;
     }
 
     // Leave the terminal on a fresh line, but do not add a blank one
     // after programs that already ended their output with newln.
-    if (!interpreter.atLineStart()) std::cout << '\n';
-    std::cout.flush();
+    interpreter.finishLine();
     return status;
 }
 

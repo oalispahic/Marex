@@ -15,6 +15,14 @@ void Interpreter::set_args(const std::vector<std::string>& args) {
     }
 }
 
+void Interpreter::finishLine() {
+    if (!at_line_start) {
+        std::cout << '\n';
+        at_line_start = true;
+    }
+    std::cout.flush();
+}
+
 void Interpreter::run(Program *prog) {
     for (Statement *statements: prog->statements) {
         execStatement(statements);
