@@ -97,7 +97,7 @@ its closing `fi` or `done`. Variables persist between inputs.
 | Command  | Effect                                                     |
 |----------|------------------------------------------------------------|
 | `:help`  | List the commands                                          |
-| `:info`  | Show every variable with its type, value and memory use    |
+| `:info`  | Show defined functions and every variable with its type, value and memory use |
 | `:reset` | Forget all variables                                       |
 | `:clear` | Clear the screen                                           |
 | `:exit`  | Leave (also Ctrl-D)                                        |
@@ -157,6 +157,30 @@ loop (10 -> 0 step -4)   // 10, 6, 2
     print("down")
 done
 ```
+
+**Functions.** `fun` opens a function, `ret` closes it. A value written after
+`ret` on the same line is returned; `ret` on its own makes the function void
+(calling it yields `NaN`). Inside an `if` or `loop` within the body, `ret`
+returns early.
+
+```
+fun fib(n)
+    if (n < 2) ret n fi
+ret fib(n - 1) + fib(n - 2)
+
+fun greet(name)
+    print("Hello, " + name)
+    print(newln)
+ret
+
+greet("Marex")
+print(fib(20))
+```
+
+Every call gets its own stack frame: parameters and `var` declarations inside
+the body are local to that call, while globals stay readable and assignable.
+Calling an undefined function, passing the wrong number of arguments, or
+recursing deeper than 1000 calls is a runtime error, reported with a call trace.
 
 **Shell commands.** `sys("ls -l")` runs a command through the system shell.
 

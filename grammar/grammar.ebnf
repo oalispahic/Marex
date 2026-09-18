@@ -11,6 +11,8 @@ STATEMENT       ::= VAR_DECL
                   | SYS
                   | IF_STMT
                   | LOOP_STMT
+                  | FUN_DECL
+                  | RETURN
                   | EXPR_STMT
 
 VAR_DECL        ::= "var" IDENT [ ":=" EXPR ]          (* no value: NaN *)
@@ -24,6 +26,15 @@ IF_STMT         ::= "if" "(" EXPR ")"
                     { STATEMENT }
                     [ "else" { STATEMENT } ]
                     "fi"
+
+(* The closing "ret" ends the function body. A return value must start on
+   the same line as "ret"; "ret" followed by a newline makes the function
+   void (a call to it evaluates to NaN). RETURN is only valid inside an
+   if/loop within a function body, where it returns early.               *)
+FUN_DECL        ::= "fun" IDENT "(" [ IDENT { "," IDENT } ] ")"
+                    { STATEMENT }
+                    "ret" [ EXPR ]
+RETURN          ::= "ret" [ EXPR ]
 
 LOOP_STMT       ::= FOR_LOOP | RANGE_LOOP
 
@@ -53,9 +64,12 @@ UNARY           ::= "-" UNARY
 PRIMARY         ::= NUMBER
                   | FLOAT
                   | STRING
+                  | CALL
                   | IDENT
                   | "newln"                            (* the string "\n" *)
                   | "(" EXPR ")"
+
+CALL            ::= IDENT "(" [ EXPR { "," EXPR } ] ")"
 
 NUMBER          ::= DIGIT { DIGIT }
 FLOAT           ::= DIGIT { DIGIT } "." DIGIT { DIGIT }

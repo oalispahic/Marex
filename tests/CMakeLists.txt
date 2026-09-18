@@ -19,6 +19,7 @@ marex_example_test(example)
 marex_example_test(loops)
 marex_example_test(types)
 marex_example_test(args one two)
+marex_example_test(functions)
 
 # CLI behaviour
 
