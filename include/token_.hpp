@@ -16,6 +16,7 @@ enum class TokenType {
     DONE,
     STEP,
     FUN,
+    RET,
     SYS,
 
     ASSIGN,
@@ -23,7 +24,7 @@ enum class TokenType {
     PLUS, PLUSPLUS, MINUS, MULTIPLY, DIVISION,
     LESS, GREATER, EQUAL, NOT_EQ,
     AND, OR,
-    L_PAR, R_PAR, L_BRACKET, R_BRACKET, DOT, SEMICOLON, NEWLN,
+    L_PAR, R_PAR, L_BRACKET, R_BRACKET, DOT, COMMA, SEMICOLON, NEWLN,
 
     IDENT,
     NUMBER,

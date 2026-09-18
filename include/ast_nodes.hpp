@@ -5,6 +5,7 @@
 #ifndef MAREX_AST_NODES_HPP
 #define MAREX_AST_NODES_HPP
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -54,6 +55,19 @@ struct ArrayExpr : Expr {
 struct ArrayIndexExpr : Expr {
     Expr *array;
     Expr *index;
+};
+
+// A call such as 'name(arg, arg)'.
+struct CallExpr : Expr {
+    std::string name;
+    std::vector<Expr *> arguments;
+    int line;
+
+    CallExpr(const std::string &name, int line) : name(name), line(line) {}
+
+    ~CallExpr() override {
+        for (auto &arg: arguments) delete arg;
+    }
 };
 
 enum class BinaryOperationType {
@@ -174,6 +188,36 @@ struct If_ST : Statement{
         for(auto &del: thenBranch) delete del;
         for(auto &del : elseBranch) delete del;
     }
+};
+
+// Early 'ret' inside an if/loop within a function body.
+struct Return_ST : Statement {
+    Expr *value;   // nullptr for a void return
+
+    explicit Return_ST(Expr *value) : value(value) {}
+
+    ~Return_ST() override { delete value; }
+};
+
+// A function definition. It is shared between the AST and the
+// interpreter's function table so that a function defined in one REPL
+// input survives the deletion of that input's Program.
+struct Function {
+    std::string name;
+    std::vector<std::string> parameters;
+    std::vector<Statement *> body;
+    Expr *returnValue = nullptr;   // the closing 'ret'; nullptr for void
+
+    ~Function() {
+        for (auto &del: body) delete del;
+        delete returnValue;
+    }
+};
+
+struct FunDecl_ST : Statement {
+    std::shared_ptr<Function> function;
+
+    explicit FunDecl_ST(std::shared_ptr<Function> function) : function(std::move(function)) {}
 };
 
 struct Program{

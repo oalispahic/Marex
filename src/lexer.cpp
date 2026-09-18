@@ -12,6 +12,7 @@ const char *tokenTypeName(TokenType type) {
         case TokenType::DONE: return "DONE";
         case TokenType::STEP: return "STEP";
         case TokenType::FUN: return "FUN";
+        case TokenType::RET: return "RET";
         case TokenType::SYS: return "SYS";
         case TokenType::ASSIGN: return "ASSIGN";
         case TokenType::ARROW: return "ARROW";
@@ -31,6 +32,7 @@ const char *tokenTypeName(TokenType type) {
         case TokenType::L_BRACKET: return "L_BRACKET";
         case TokenType::R_BRACKET: return "R_BRACKET";
         case TokenType::DOT: return "DOT";
+        case TokenType::COMMA: return "COMMA";
         case TokenType::SEMICOLON: return "SEMICOLON";
         case TokenType::NEWLN: return "NEWLN";
         case TokenType::IDENT: return "IDENT";
@@ -141,6 +143,7 @@ std::vector<Token> Lexer::tokenize() {
             else if (val == "sys") tokens.push_back({TokenType::SYS, val, line});
             else if (val == "step") tokens.push_back({TokenType::STEP, val, line});
             else if (val == "fun") tokens.push_back({TokenType::FUN, val, line});
+            else if (val == "ret") tokens.push_back({TokenType::RET, val, line});
             else tokens.push_back({TokenType::IDENT, val, line});
 
             continue;
@@ -246,7 +249,10 @@ std::vector<Token> Lexer::tokenize() {
                 break;
             case '.':
                 tokens.push_back({TokenType::DOT, ".", line});
-                break;;
+                break;
+            case ',':
+                tokens.push_back({TokenType::COMMA, ",", line});
+                break;
             default:
                 tokens.push_back({TokenType::ERR, "Unexpected character '" + std::string(1, current()) + "'", line});
                 break;

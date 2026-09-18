@@ -19,6 +19,7 @@ enum class ParseStatus {
 class Parser {
     std::vector<Token> tokens;
     size_t current_token = 0;
+    int function_depth = 0;   // > 0 while parsing a function body
 
 public:
     explicit Parser(const std::vector<Token> &tokens) : tokens(tokens) {}
@@ -50,6 +51,10 @@ private:
 
     Statement *parseFor();
 
+    Statement *parseFunction();
+
+    Statement *parseReturn();
+
     Expr *parseRangeValue();
 
     bool isRangeHeader() const;
@@ -73,6 +78,8 @@ private:
     Expr *parseUnary();
 
     Expr *parsePrimary();
+
+    Expr *parseCall();
 
     //---------HELPERS----------
 

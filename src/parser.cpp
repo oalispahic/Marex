@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <memory>
 #include "../include/token_.hpp"
 #include "../include/parser.hpp"
 #include "../include/ast_nodes.hpp"
@@ -62,6 +63,11 @@ ParseStatus Parser::getParseStatus(const std::vector<Token> &tokens) {
 
     TokenType lastSignificant = TokenType::END_OF_FILE;
 
+    // Open blocks, innermost last. 'ret' closes a function body only when
+    // the innermost open block is the function itself; inside an if/loop
+    // it is an early return.
+    std::vector<TokenType> openBlocks;
+
     for (const auto &token: tokens) {
         if (token.type == TokenType::END_OF_FILE) break;
         if (token.type == TokenType::ERR) return ParseStatus::ERR;
@@ -73,13 +79,17 @@ ParseStatus Parser::getParseStatus(const std::vector<Token> &tokens) {
         } else if (token.type == TokenType::R_PAR) {
             --parenDepth;
             if (parenDepth < 0) return ParseStatus::ERR;
-        } else if (token.type == TokenType::IF || token.type == TokenType::LOOP) {
-            ++blockDepth;
+        } else if (token.type == TokenType::IF || token.type == TokenType::LOOP || token.type == TokenType::FUN) {
+            openBlocks.push_back(token.type);
         } else if (token.type == TokenType::FI || token.type == TokenType::DONE) {
-            --blockDepth;
-            if (blockDepth < 0) return ParseStatus::ERR;
+            if (openBlocks.empty()) return ParseStatus::ERR;
+            openBlocks.pop_back();
+        } else if (token.type == TokenType::RET) {
+            if (openBlocks.empty()) return ParseStatus::ERR;
+            if (openBlocks.back() == TokenType::FUN) openBlocks.pop_back();
         }
     }
+    blockDepth = static_cast<int>(openBlocks.size());
 
     if (parenDepth > 0 || blockDepth > 0) return ParseStatus::WAIT;
 
@@ -99,6 +109,7 @@ ParseStatus Parser::getParseStatus(const std::vector<Token> &tokens) {
         case TokenType::AND:
         case TokenType::OR:
         case TokenType::L_PAR:
+        case TokenType::COMMA:
         case TokenType::SEMICOLON:
             return ParseStatus::WAIT;
         default:
@@ -121,6 +132,8 @@ Statement *Parser::parseStatement() {
     if (match_advance(TokenType::IF)) return parseIf();
     if (match_advance(TokenType::LOOP)) return parseLoop();
     if (match_advance(TokenType::SYS)) return parseSystem();
+    if (match_advance(TokenType::FUN)) return parseFunction();
+    if (check_valid_type(TokenType::RET)) return parseReturn();
 
     if (check_valid_type(TokenType::IDENT)) {
         const TokenType following = tokens[current_token + 1].type;
@@ -306,6 +319,55 @@ Statement *Parser::parseFor() {
     return forLoop;
 }
 
+// fun name(a, b) { STATEMENT } ret [EXPR]
+// The closing 'ret' ends the body; a value must start on the same line.
+Statement *Parser::parseFunction() {
+    const Token &nameToken = consume(TokenType::IDENT, "Expected function name after 'fun'. ");
+    std::shared_ptr<Function> function(new Function);
+    function->name = nameToken.val;
+
+    consume(TokenType::L_PAR, "Expected '(' after function name. ");
+    if (!check_valid_type(TokenType::R_PAR)) {
+        do {
+            const Token &param = consume(TokenType::IDENT, "Expected parameter name. ");
+            function->parameters.push_back(param.val);
+        } while (match_advance(TokenType::COMMA));
+    }
+    consume(TokenType::R_PAR, "Expected ')' after parameters. ");
+
+    ++function_depth;
+    try {
+        while (!check_valid_type(TokenType::RET) && !isEnd()) {
+            function->body.push_back(parseStatement());
+        }
+        if (!check_valid_type(TokenType::RET)) {
+            failAtCurrent("Expected 'ret' to close the body of function '" + function->name + "'. ");
+        }
+        const Token &ret = next();
+        if (!isEnd() && peek().token_line == ret.token_line) {
+            function->returnValue = parseExpr();
+        }
+    } catch (...) {
+        --function_depth;
+        throw;
+    }
+    --function_depth;
+
+    return new FunDecl_ST(function);
+}
+
+// An early 'ret' inside an if/loop within a function body.
+Statement *Parser::parseReturn() {
+    if (function_depth == 0) failAtCurrent("'ret' outside of a function. ");
+    const Token &ret = next();
+
+    Expr *value = nullptr;
+    if (!isEnd() && peek().token_line == ret.token_line) {
+        value = parseExpr();
+    }
+    return new Return_ST(value);
+}
+
 Expr *Parser::parseExpr() {
     return parseLogicOr();
 }
@@ -416,8 +478,9 @@ Expr *Parser::parsePrimary() {
         return new StringExpr(previous().val);
     }
 
-    if (match_advance(TokenType::IDENT)) {
-        return new IdentExpr(previous().val);
+    if (check_valid_type(TokenType::IDENT)) {
+        if (tokens[current_token + 1].type == TokenType::L_PAR) return parseCall();
+        return new IdentExpr(next().val);
     }
 
     if (match_advance(TokenType::NEWLN)) {
@@ -430,4 +493,19 @@ Expr *Parser::parsePrimary() {
         return expr;
     }
     failAtCurrent("Expected expression");
+}
+
+// name(arg, arg)
+Expr *Parser::parseCall() {
+    const Token &nameToken = next();
+    std::unique_ptr<CallExpr> call(new CallExpr(nameToken.val, nameToken.token_line));
+
+    consume(TokenType::L_PAR, "Expected '(' after function name. ");
+    if (!check_valid_type(TokenType::R_PAR)) {
+        do {
+            call->arguments.push_back(parseExpr());
+        } while (match_advance(TokenType::COMMA));
+    }
+    consume(TokenType::R_PAR, "Expected ')' after arguments. ");
+    return call.release();
 }
