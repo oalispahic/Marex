@@ -82,6 +82,16 @@ struct Statement : Node {
 struct NullStmt : Statement {
     virtual ~NullStmt() = default;
 };
+
+// A bare expression used as a statement. It is evaluated for its side
+// effects (and errors) and the result is discarded.
+struct Expr_ST : Statement {
+    Expr *expression;
+
+    explicit Expr_ST(Expr *expression) : expression(expression) {}
+
+    ~Expr_ST() override { delete expression; }
+};
 struct VarDeclaration_ST : Statement {
     std::string var_name;
     bool isArray;

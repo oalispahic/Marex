@@ -114,18 +114,13 @@ Statement *Parser::parseStatement() {
     if (match_advance(TokenType::LOOP)) return parseLoop();
     if (match_advance(TokenType::SYS)) return parseSystem();
 
-    if (check_valid_type(TokenType::IDENT) && tokens[current_token + 1].type == TokenType::PLUSPLUS) {
-        return parseAssign();
+    if (check_valid_type(TokenType::IDENT)) {
+        const TokenType following = tokens[current_token + 1].type;
+        if (following == TokenType::ASSIGN || following == TokenType::PLUSPLUS) return parseAssign();
     }
 
-    if (check_valid_type(TokenType::IDENT) && tokens[current_token + 1].type == TokenType::ASSIGN) {
-        return parseAssign();
-    }
-
-    //Can add expr as stmt for function calls later
-
-    Expr *expression = parseExpr();
-    return new NullStmt();
+    // Anything else is an expression statement (later: function calls).
+    return new Expr_ST(parseExpr());
 }
 
 Statement *Parser::parseVarDeclaration() {
@@ -142,6 +137,13 @@ Statement *Parser::parseVarDeclaration() {
 
 Statement *Parser::parseAssign() {
     const Token &varName = consume(TokenType::IDENT, "Expected variable to assign to!");
+
+    // 'i++' is sugar for 'i := i + 1'
+    if (match_advance(TokenType::PLUSPLUS)) {
+        Expr *increment = new BinaryExpr(new IdentExpr(varName.val), new NumExpr(1), BinaryOperationType::ADD);
+        return new Assign_ST(varName.val, increment);
+    }
+
     consume(TokenType::ASSIGN, "Expected ':=' in assignment. ");
     Expr *value = parseExpr();
     return new Assign_ST(varName.val, value);
