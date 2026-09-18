@@ -8,12 +8,13 @@
 #include "../include/parser.hpp"
 #include "../include/interpreter.hpp"
 #include "../include/runtime.hpp"
+#include "../include/style.hpp"
 
 namespace {
 bool read_file(const std::string &file_path, std::string &out) {
     std::ifstream file(file_path);
     if (!file) {
-        std::cerr << "marex: cannot open file '" << file_path << "'\n";
+        style::printError("marex: cannot open file '" + file_path + "'");
         return false;
     }
     std::stringstream buffer;
@@ -37,7 +38,7 @@ int execute_source_once(const std::string &source, const std::vector<std::string
         interpreter.run(program.get());
     } catch (const std::exception &e) {
         interpreter.finishLine();
-        std::cerr << e.what() << '\n';
+        style::printError(e.what());
         status = EXIT_SCRIPT_ERROR;
     }
 
@@ -60,7 +61,9 @@ int dump_tokens_file(const std::string &file_path) {
     Lexer lexer(source);
     const auto tokens = lexer.tokenize();
 
-    std::cout << std::left << std::setw(6) << "line" << std::setw(14) << "type" << "value\n";
+    std::ostringstream header;
+    header << std::left << std::setw(6) << "line" << std::setw(14) << "type" << "value";
+    std::cout << style::out().dim(header.str()) << '\n';
     for (const Token &token: tokens) {
         std::string value = token.val;
         if (value == "\n") value = "\\n";
