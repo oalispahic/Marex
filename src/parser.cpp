@@ -48,6 +48,65 @@ Program *Parser::parse() {
     return prog;
 }
 
+ParseStatus Parser::getParseStatus(const std::vector<Token> &tokens) {
+    int parenDepth = 0;
+    int blockDepth = 0;
+
+    TokenType lastSignificant = TokenType::END_OF_FILE;
+
+    for (const auto &token: tokens) {
+        if (token.type == TokenType::END_OF_FILE) break;
+        if (token.type == TokenType::ERR) return ParseStatus::ERR;
+
+        lastSignificant = token.type;
+
+        if (token.type == TokenType::L_PAR) {
+            ++parenDepth;
+        } else if (token.type == TokenType::R_PAR) {
+            --parenDepth;
+            if (parenDepth < 0) return ParseStatus::ERR;
+        } else if (token.type == TokenType::IF || token.type == TokenType::LOOP) {
+            ++blockDepth;
+        } else if (token.type == TokenType::FI || token.type == TokenType::DONE) {
+            --blockDepth;
+            if (blockDepth < 0) return ParseStatus::ERR;
+        }
+    }
+
+    if (parenDepth > 0 || blockDepth > 0) return ParseStatus::WAIT;
+
+    switch (lastSignificant) {
+        case TokenType::VAR:
+        case TokenType::ASSIGN:
+        case TokenType::ARROW:
+        case TokenType::STEP:
+        case TokenType::PLUS:
+        case TokenType::MINUS:
+        case TokenType::MULTIPLY:
+        case TokenType::DIVISION:
+        case TokenType::LESS:
+        case TokenType::GREATER:
+        case TokenType::EQUAL:
+        case TokenType::NOT_EQ:
+        case TokenType::AND:
+        case TokenType::OR:
+        case TokenType::L_PAR:
+        case TokenType::SEMICOLON:
+            return ParseStatus::WAIT;
+        default:
+            break;
+    }
+
+    try {
+        Parser parser(tokens);
+        Program *program = parser.parse();
+        delete program;
+        return ParseStatus::COMPLETE;
+    } catch (...) {
+        return ParseStatus::ERR;
+    }
+}
+
 Statement *Parser::parseStatement() {
     if (match_advance(TokenType::VAR)) return parseVarDeclaration();
     if (match_advance(TokenType::PRINT)) return parsePrint();

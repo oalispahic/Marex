@@ -10,6 +10,12 @@
 #include <vector>
 #include <string>
 
+enum class ParseStatus {
+    COMPLETE,
+    WAIT,
+    ERR
+};
+
 class Parser {
     std::vector<Token> tokens;
     size_t current_token = 0;
@@ -18,6 +24,7 @@ public:
     explicit Parser(const std::vector<Token> &tokens) : tokens(tokens) {}
 
     Program *parse();
+    static ParseStatus getParseStatus(const std::vector<Token> &tokens);
 
 private:
 
