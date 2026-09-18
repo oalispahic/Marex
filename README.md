@@ -188,6 +188,17 @@ More examples live in [`test_program/`](test_program/).
 
 ---
 
+## Editor support
+
+A VS Code extension with syntax highlighting, snippets and a formatter lives in
+[`editors/vscode/`](editors/vscode/). Install it with:
+
+```sh
+./editors/vscode/install.sh
+```
+
+---
+
 ## Architecture
 
 ```

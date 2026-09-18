@@ -1,0 +1,113 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Marex",
+  "scopeName": "source.marex",
+  "fileTypes": ["mx"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#function-declaration" },
+    { "include": "#keywords" },
+    { "include": "#builtins" },
+    { "include": "#numbers" },
+    { "include": "#operators" },
+    { "include": "#function-call" },
+    { "include": "#variables" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.marex",
+          "begin": "//",
+          "end": "$"
+        },
+        {
+          "name": "comment.block.marex",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.marex",
+      "begin": "\"",
+      "end": "\""
+    },
+    "function-declaration": {
+      "match": "\\b(fun)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "storage.type.function.marex" },
+        "2": { "name": "entity.name.function.marex" }
+      }
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.conditional.marex",
+          "match": "\\b(if|else|fi)\\b"
+        },
+        {
+          "name": "keyword.control.loop.marex",
+          "match": "\\b(loop|done|step)\\b"
+        },
+        {
+          "name": "keyword.control.return.marex",
+          "match": "\\b(ret)\\b"
+        },
+        {
+          "name": "storage.type.marex",
+          "match": "\\b(var|fun)\\b"
+        }
+      ]
+    },
+    "builtins": {
+      "patterns": [
+        {
+          "name": "support.function.builtin.marex",
+          "match": "\\b(print|sys)\\b"
+        },
+        {
+          "name": "constant.language.marex",
+          "match": "\\b(newln)\\b"
+        },
+        {
+          "name": "variable.language.marex",
+          "match": "\\b(ARGC|ARGV[0-9]+)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.marex",
+          "match": "\\b[0-9]+\\.[0-9]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.marex",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        { "name": "keyword.operator.assignment.marex", "match": ":=" },
+        { "name": "keyword.operator.arrow.marex", "match": "->" },
+        { "name": "keyword.operator.increment.marex", "match": "\\+\\+" },
+        { "name": "keyword.operator.comparison.marex", "match": "!=|=|<|>" },
+        { "name": "keyword.operator.logical.marex", "match": "&|\\|" },
+        { "name": "keyword.operator.arithmetic.marex", "match": "[-+*/]" }
+      ]
+    },
+    "function-call": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)(?=\\s*\\()",
+      "captures": {
+        "1": { "name": "entity.name.function.call.marex" }
+      }
+    },
+    "variables": {
+      "name": "variable.other.marex",
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+    }
+  }
+}
