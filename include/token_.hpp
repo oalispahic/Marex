@@ -1,10 +1,10 @@
 //
 // Created by Omar Alispahic on 31. 10. 2025..
 //
-#include <iostream>
+#ifndef MAREX_TOKEN_HPP
+#define MAREX_TOKEN_HPP
+
 #include <string>
-#ifndef MAREX_LEXER_HPP
-#define MAREX_LEXER_HPP
 
 enum class TokenType {
     VAR = 0,
@@ -37,7 +37,7 @@ enum class TokenType {
 struct Token {
     TokenType type;
     std::string val;
-    int token_line;
+    int token_line;   // 1-based source line the token starts on
 };
 
-#endif //MAREX_LEXER_HPP
+#endif //MAREX_TOKEN_HPP

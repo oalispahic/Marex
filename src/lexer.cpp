@@ -1,6 +1,5 @@
 #include "../include/lexer.hpp"
-#include <iostream>
-#include <fstream>
+#include <cctype>
 
 char Lexer::peek() {
     if (curr + 1 >= file.size()) return '\0';
@@ -15,7 +14,7 @@ void Lexer::consume() {
     curr++;
 }
 
-int Lexer::index() {
+size_t Lexer::index() {
     return curr;
 }
 

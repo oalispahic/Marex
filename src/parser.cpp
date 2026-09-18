@@ -396,5 +396,5 @@ Expr *Parser::parsePrimary() {
         consume(TokenType::R_PAR, "Expected ')' after expression. ");
         return expr;
     }
-    throw std::runtime_error("Line " + std::to_string(peek().token_line + 1) + ": Expected expression");
+    throw std::runtime_error("Line " + std::to_string(peek().token_line) + ": Expected expression");
 }
