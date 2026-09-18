@@ -1,0 +1,7 @@
+0 1 2 
+up up up 
+down down down 
+step step step 
+*
+**
+***

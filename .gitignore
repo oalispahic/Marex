@@ -30,3 +30,6 @@ marex
 # Logs & testing
 Testing/
 *.log
+# Editor / IDE project files
+.idea/
+.vscode/

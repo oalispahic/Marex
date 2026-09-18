@@ -1,42 +1,37 @@
 //
 // Created by Omar Alispahic on 31. 10. 2025..
 //
-#include <iostream>
+#ifndef MAREX_LEXER_HPP
+#define MAREX_LEXER_HPP
+
 #include <string>
 #include <vector>
 #include "token_.hpp"
 
-
-#ifndef MAREX_TOKEN_HPP
-#define MAREX_TOKEN_HPP
-
-
-
 class Lexer{
     std::vector<Token> Tokens;
-    int curr = 0;
-    int line = 0;
+    size_t curr = 0;
+    int line = 1;
     std::string file;
+    bool open_block_comment = false;
 
 public:
-    Lexer(const std::string &f) : file(f){}
-
-private:
-
-     char peek();
-
-     char current();
-
-     int index();
-
-     void consume();
-
-public:
+    explicit Lexer(const std::string &f) : file(f){}
 
     std::vector<Token> tokenize();
+
+    // True after tokenize() if the source ended inside a '/* ... */'
+    // comment. The REPL uses it to keep reading lines.
+    bool inOpenBlockComment() const { return open_block_comment; }
+
+private:
+    char peek();
+
+    char current();
+
+    size_t index();
+
+    void consume();
 };
 
-
-#endif //MAREX_TOKEN_HPP
-
-
+#endif //MAREX_LEXER_HPP

@@ -1,0 +1,41 @@
+// Functions: 'fun name(params)' opens the body, 'ret' closes it.
+// A value after 'ret' on the same line is returned; 'ret' alone is void.
+
+fun square(x)
+ret x * x
+
+fun greet(name)
+    print("Hello, " + name + "!")
+    print(newln)
+ret
+
+// Early return from inside a block; the final 'ret' still closes the body.
+fun sign(n)
+    if (n < 0) ret -1 fi
+    if (n > 0) ret 1 fi
+ret 0
+
+// Recursion, each call has its own frame for 'n'.
+fun fib(n)
+    if (n < 2) ret n fi
+ret fib(n - 1) + fib(n - 2)
+
+// Locals are per call; globals stay visible.
+var calls := 0
+fun counted(x)
+    calls++
+    var x := x * 10          // shadows the parameter locally
+ret x
+
+greet("Marex")
+print(square(7))
+print(newln)
+print(sign(-5) + sign(0) + sign(9))
+print(newln)
+
+loop 0 -> 10
+    print(fib(counted(1)) + " ")
+done
+print(newln)
+print("counted was called " + calls + " times")
+print(newln)

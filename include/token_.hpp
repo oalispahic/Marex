@@ -1,12 +1,12 @@
 //
 // Created by Omar Alispahic on 31. 10. 2025..
 //
-#include <iostream>
-#include <string>
-#ifndef MAREX_LEXER_HPP
-#define MAREX_LEXER_HPP
+#ifndef MAREX_TOKEN_HPP
+#define MAREX_TOKEN_HPP
 
-enum class TokenType{
+#include <string>
+
+enum class TokenType {
     VAR = 0,
     PRINT,
     IF,
@@ -14,27 +14,34 @@ enum class TokenType{
     FI,
     LOOP,
     DONE,
+    STEP,
+    FUN,
+    RET,
+    SYS,
 
     ASSIGN,
     ARROW,
-    PLUS, MINUS, MULTIPLY, DIVISION,
+    PLUS, PLUSPLUS, MINUS, MULTIPLY, DIVISION,
     LESS, GREATER, EQUAL, NOT_EQ,
     AND, OR,
-    L_PAR, R_PAR, SEMICOLON, NEWLN,
+    L_PAR, R_PAR, L_BRACKET, R_BRACKET, DOT, COMMA, SEMICOLON, NEWLN,
 
     IDENT,
     NUMBER,
+    FLOAT,
     STRING,
 
     END_OF_FILE,
     ERR,
-
 };
 
-struct Token{
+struct Token {
     TokenType type;
     std::string val;
-    int token_line;
+    int token_line;   // 1-based source line the token starts on
 };
 
-#endif //MAREX_LEXER_HPP
+// Upper-case name of a token type, e.g. "IDENT", for diagnostics.
+const char *tokenTypeName(TokenType type);
+
+#endif //MAREX_TOKEN_HPP

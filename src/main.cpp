@@ -1,88 +1,40 @@
 //
-// Created by Omar Alispahic on 23. 12. 2025..
+// Created by Omar Alispahic on 21. 12. 2025..
 //
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include "../include/lexer.hpp"
-#include "../include/parser.hpp"
-#include "../include/interpreter.hpp"
-
-
-void clear_terminal(){
-#if defined(_WIN32) || defined(__MINGW32__) || defined(__CYGWIN__)
-    system("cls");
-#else
-    system("clear");
-#endif
-}
-void compile_and_run(const std::string &source){
-    try{
-        Lexer lexer(source);
-        auto tokens = lexer.tokenize();
-
-        Parser parser(tokens);
-        auto program = parser.parse();
-
-        Interpreter interpreter;
-        interpreter.run(program);
-    }
-    catch(const std::exception &e){
-        std::cerr<<e.what()<<'\n';
-        return;
-    }
-}
-
-void repl(){
-    std::string line;
-    std::string program;
-    clear_terminal();
-    std::cout<<"Welcome to Marex REPL (type :run to execute, :exit to quit, :clear to clear terminal)\n";
-
-    while(true){
-        std::cout<<"marex> ";
-        std::getline(std::cin,line);
-
-        if (line ==":clear") {
-            clear_terminal();
-            line.clear();
-        }
-        if(line==":exit"){
-            std::cout<<'\n'<<"Quit!"<<'\n';
-            break;
-        }
-        if(line == ":run"){
-            compile_and_run(program);
-            std::cout<<'\n';
-            program.clear();
-            continue;
-        }
-
-        program += line;
-    }
-}
-
+#include "../include/cli.hpp"
+#include "../include/repl.hpp"
+#include "../include/runtime.hpp"
+#include "version.hpp"
 
 int main(int argc, char** argv){
+    const CliParseResult parsed = parse_cli(argc, argv);
+    const CliOptions &options = parsed.options;
 
-    if(argc != 2){
+    if (!parsed.error.empty()) {
+        std::cerr << "marex: " << parsed.error << "\n\n" << cli_usage();
+        return EXIT_USAGE_ERROR;
+    }
+
+    if (options.show_help) {
+        std::cout << cli_usage();
+        return EXIT_OK;
+    }
+
+    if (options.show_version) {
+        std::cout << "Marex " << MAREX_VERSION_STRING << '\n';
+        return EXIT_OK;
+    }
+
+    if (options.repl) {
         repl();
-        return 1;
+        return EXIT_OK;
     }
 
-    std::ifstream file(argv[1]);
-    if(!file){
-        std::cerr<<"Error opening file "<<argv[1]<<'\n';
-        return 1;
+    if (options.dump_tokens) {
+        return dump_tokens_file(options.file);
     }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string source = buffer.str();
 
-    compile_and_run(source);
-    source.clear();
-    std::cout<<'\n';
-
-    return 0;
+    return execute_script_file(options.file, options.script_args);
 }

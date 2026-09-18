@@ -3,6 +3,8 @@
 //
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <memory>
 #include "../include/token_.hpp"
 #include "../include/parser.hpp"
 #include "../include/ast_nodes.hpp"
@@ -33,7 +35,15 @@ bool Parser::match_advance(TokenType type) {
 
 const Token &Parser::consume(TokenType type, const std::string &err_msg) {
     if (check_valid_type(type)) return next();
-    throw std::runtime_error("Line " + std::to_string(peek().token_line) + ": "+err_msg);
+    failAtCurrent(err_msg);
+}
+
+// Throws a syntax error for the current token. Lexer error tokens carry
+// their own message, which is more useful than what the parser expected.
+void Parser::failAtCurrent(const std::string &err_msg) const {
+    const Token &token = peek();
+    const std::string message = token.type == TokenType::ERR ? token.val : err_msg;
+    throw std::runtime_error("Line " + std::to_string(token.token_line) + ": " + message);
 }
 
 
@@ -47,41 +57,131 @@ Program *Parser::parse() {
     return prog;
 }
 
+ParseStatus Parser::getParseStatus(const std::vector<Token> &tokens) {
+    int parenDepth = 0;
+    int blockDepth = 0;
+
+    TokenType lastSignificant = TokenType::END_OF_FILE;
+
+    // Open blocks, innermost last. 'ret' closes a function body only when
+    // the innermost open block is the function itself; inside an if/loop
+    // it is an early return.
+    std::vector<TokenType> openBlocks;
+
+    for (const auto &token: tokens) {
+        if (token.type == TokenType::END_OF_FILE) break;
+        if (token.type == TokenType::ERR) return ParseStatus::ERR;
+
+        lastSignificant = token.type;
+
+        if (token.type == TokenType::L_PAR) {
+            ++parenDepth;
+        } else if (token.type == TokenType::R_PAR) {
+            --parenDepth;
+            if (parenDepth < 0) return ParseStatus::ERR;
+        } else if (token.type == TokenType::IF || token.type == TokenType::LOOP || token.type == TokenType::FUN) {
+            openBlocks.push_back(token.type);
+        } else if (token.type == TokenType::FI || token.type == TokenType::DONE) {
+            if (openBlocks.empty()) return ParseStatus::ERR;
+            openBlocks.pop_back();
+        } else if (token.type == TokenType::RET) {
+            if (openBlocks.empty()) return ParseStatus::ERR;
+            if (openBlocks.back() == TokenType::FUN) openBlocks.pop_back();
+        }
+    }
+    blockDepth = static_cast<int>(openBlocks.size());
+
+    if (parenDepth > 0 || blockDepth > 0) return ParseStatus::WAIT;
+
+    switch (lastSignificant) {
+        case TokenType::VAR:
+        case TokenType::ASSIGN:
+        case TokenType::ARROW:
+        case TokenType::STEP:
+        case TokenType::PLUS:
+        case TokenType::MINUS:
+        case TokenType::MULTIPLY:
+        case TokenType::DIVISION:
+        case TokenType::LESS:
+        case TokenType::GREATER:
+        case TokenType::EQUAL:
+        case TokenType::NOT_EQ:
+        case TokenType::AND:
+        case TokenType::OR:
+        case TokenType::L_PAR:
+        case TokenType::COMMA:
+        case TokenType::SEMICOLON:
+            return ParseStatus::WAIT;
+        default:
+            break;
+    }
+
+    try {
+        Parser parser(tokens);
+        Program *program = parser.parse();
+        delete program;
+        return ParseStatus::COMPLETE;
+    } catch (...) {
+        return ParseStatus::ERR;
+    }
+}
+
 Statement *Parser::parseStatement() {
     if (match_advance(TokenType::VAR)) return parseVarDeclaration();
     if (match_advance(TokenType::PRINT)) return parsePrint();
     if (match_advance(TokenType::IF)) return parseIf();
     if (match_advance(TokenType::LOOP)) return parseLoop();
+    if (match_advance(TokenType::SYS)) return parseSystem();
+    if (match_advance(TokenType::FUN)) return parseFunction();
+    if (check_valid_type(TokenType::RET)) return parseReturn();
 
-    if(check_valid_type(TokenType::IDENT)&& tokens[current_token+1].type == TokenType::ASSIGN){
-        return parseAssign();
+    if (check_valid_type(TokenType::IDENT)) {
+        const TokenType following = tokens[current_token + 1].type;
+        if (following == TokenType::ASSIGN || following == TokenType::PLUSPLUS) return parseAssign();
     }
-    //Can add expr as stmt for function calls later
 
-    Expr *expression = parseExpr();
-    return new NullStmt();
-
+    // Anything else is an expression statement (later: function calls).
+    return new Expr_ST(parseExpr());
 }
 
 Statement *Parser::parseVarDeclaration() {
     const Token &varName = consume(TokenType::IDENT, "Expected variable name after 'var'!");
-    consume(TokenType::ASSIGN, "Expected ':=' in assignment. ");
+    if (!match_advance(TokenType::ASSIGN)) {
+        Expr *nullExpr = new NullExpr;
+        return new VarDeclaration_ST(varName.val, nullExpr);
+    }
+
     Expr *value = parseExpr();
     return new VarDeclaration_ST(varName.val, value);
 }
 
+
 Statement *Parser::parseAssign() {
     const Token &varName = consume(TokenType::IDENT, "Expected variable to assign to!");
-    consume(TokenType::ASSIGN,"Expected ':=' in assignment. ");
-    Expr* value = parseExpr();
-    return new Assign_ST(varName.val,value);
+
+    // 'i++' is sugar for 'i := i + 1'
+    if (match_advance(TokenType::PLUSPLUS)) {
+        Expr *increment = new BinaryExpr(new IdentExpr(varName.val), new NumExpr(1), BinaryOperationType::ADD);
+        return new Assign_ST(varName.val, increment);
+    }
+
+    consume(TokenType::ASSIGN, "Expected ':=' in assignment. ");
+    Expr *value = parseExpr();
+    return new Assign_ST(varName.val, value);
 }
 
 Statement *Parser::parsePrint() {
-    consume(TokenType::L_PAR,"Expected '(' after print. ");
+    consume(TokenType::L_PAR, "Expected '(' after print. ");
     Expr *value = parseExpr();
     consume(TokenType::R_PAR, "Expected ')' after print expression. ");
     return new Print_ST(value);
+}
+
+Statement *Parser::parseSystem() {
+    consume(TokenType::L_PAR, "Expected '(' after sys. ");
+    Token system_statement = consume(TokenType::STRING, "Expected string as system statement. ");
+    consume(TokenType::R_PAR, "Expected ')' after system statement. ");
+    return new System_ST(system_statement.val);
 }
 
 Statement *Parser::parseIf() {
@@ -89,216 +189,323 @@ Statement *Parser::parseIf() {
     Expr *condition = parseExpr();
     consume(TokenType::R_PAR, "Expected ')' after condition. ");
 
-    If_ST* if_block = new If_ST(condition);
+    If_ST *if_block = new If_ST(condition);
 
-    while(!check_valid_type(TokenType::ELSE)&& !check_valid_type(TokenType::FI)&& !isEnd()){
-        Statement * statements = parseStatement();
+    while (!check_valid_type(TokenType::ELSE) && !check_valid_type(TokenType::FI) && !isEnd()) {
+        Statement *statements = parseStatement();
         if_block->thenBranch.push_back(statements);
     }
 
-    if(match_advance(TokenType::ELSE)){
-        while(!check_valid_type(TokenType::FI)&& !isEnd()){
+    if (match_advance(TokenType::ELSE)) {
+        while (!check_valid_type(TokenType::FI) && !isEnd()) {
             Statement *statements = parseStatement();
             if_block->elseBranch.push_back(statements);
         }
     }
     consume(TokenType::FI, "Expected 'fi' at end of if block. ");
     return if_block;
-
 }
 
 Statement *Parser::parseLoop() {
-
-    //range loop check and parse
-
-    if (check_valid_type(TokenType::L_PAR)) {
-        next();
-
-
-        if (check_valid_type(TokenType::IDENT) && tokens[current_token + 1].type == TokenType::ARROW) {
-
-            Token start_ident = next();
-            consume(TokenType::ARROW, "Expected '->' in range loop. ");
-            Token end_ident = consume(TokenType::IDENT, "Expected identifier after '->' in range loop. ");
-            consume(TokenType::R_PAR, "Expected closing ')' bracket in loop. ");
-            RangeLoop_ST *rangeLoop = new RangeLoop_ST(start_ident.val, end_ident.val);
-
-            while (!check_valid_type(TokenType::DONE) && !isEnd()) {
-                Statement *statements = parseStatement();
-                rangeLoop->LoopBody.push_back(statements);
-            }
-            consume(TokenType::DONE, "Expected 'done' after loop body. ");
-            return rangeLoop;
-        }
-
-
-        Statement *initial = nullptr;
-        if (check_valid_type(TokenType::VAR)) {
-            next();
-            initial = parseVarDeclaration();
-        } else if (check_valid_type(TokenType::IDENT)) Token identifier = next();
-
-        consume(TokenType::SEMICOLON, "Expected ';' after loop initialisation. ");
-
-        Expr *condition = parseExpr();
-
-        consume(TokenType::SEMICOLON, "Expected ';' after loop condiiton. ");
-
-        Statement *counter = nullptr;
-
-        if (check_valid_type(TokenType::IDENT)) {
-            counter = parseAssign();
-        } else {
-            throw std::runtime_error("Expected assignment for loop increment. ");
-        }
-
-        consume(TokenType::R_PAR, "Expected closing ')' for loop header. ");
-
-        Loop_ST *forLoop = new Loop_ST(initial, condition, counter);
-
-        while (!check_valid_type(TokenType::DONE) && !isEnd()) {
-            Statement *statement = parseStatement();
-            forLoop->LoopBody.push_back(statement);
-
-        }
-        consume(TokenType::DONE, "Expected 'done' after loop body. ");
-        return forLoop;
-
-    }
-    throw std::runtime_error("Expected '(' after loop. ");
+    if (isRangeHeader()) return parseRange();
+    return parseFor();
 }
 
-Expr* Parser::parseExpr() {
+// A range loop header is '[(] [-]value -> ...'; anything else after
+// 'loop' is treated as a C-style header.
+bool Parser::isRangeHeader() const {
+    size_t i = current_token;
+    if (tokens[i].type == TokenType::L_PAR) ++i;
+    if (tokens[i].type == TokenType::MINUS) ++i;
+    if (tokens[i].type != TokenType::IDENT && tokens[i].type != TokenType::NUMBER) return false;
+    return tokens[i + 1].type == TokenType::ARROW;
+}
+
+Statement *Parser::parseRange() {
+    const bool parenthesized = match_advance(TokenType::L_PAR);
+
+    Expr *start = parseRangeValue();
+    if (!start) {
+        throw std::runtime_error("Expected start value or variable in range loop. ");
+    }
+
+    consume(TokenType::ARROW, "Expected '->' in range loop. ");
+
+    Expr *end = parseRangeValue();
+    if (!end) {
+        delete start;
+        throw std::runtime_error("Expected end value or variable in range loop. ");
+    }
+
+    Expr *step = nullptr;
+    if (match_advance(TokenType::STEP)) {
+        step = parseRangeValue();
+        if (!step) {
+            delete start;
+            delete end;
+            throw std::runtime_error("Expected step value or variable in range loop. ");
+        }
+    }
+
+    if (parenthesized) {
+        try {
+            consume(TokenType::R_PAR, "Expected closing ')' after range loop header. ");
+        } catch (...) {
+            delete start;
+            delete end;
+            delete step;
+            throw;
+        }
+    }
+
+    RangeLoop_ST *rangeLoop = new RangeLoop_ST(start, end, step);
+    while (!check_valid_type(TokenType::DONE) && !isEnd()) {
+        Statement *statements = parseStatement();
+        rangeLoop->LoopBody.push_back(statements);
+    }
+    consume(TokenType::DONE, "Expected 'done' after loop body. ");
+    return rangeLoop;
+}
+
+Expr *Parser::parseRangeValue() {
+    if (check_valid_type(TokenType::IDENT)) {
+        return new IdentExpr(next().val);
+    }
+
+    bool negative = false;
+    if (match_advance(TokenType::MINUS)) {
+        negative = true;
+    }
+
+    if (check_valid_type(TokenType::NUMBER)) {
+        int parsed = std::stoi(next().val);
+        return new NumExpr(negative ? -parsed : parsed);
+    }
+    return nullptr;
+}
+
+Statement *Parser::parseFor() {
+    consume(TokenType::L_PAR, "Expected '(' after loop for c-style loop. ");
+
+    Statement *initial = nullptr;
+    if (check_valid_type(TokenType::VAR)) {
+        next();
+        initial = parseVarDeclaration();
+    } else if (check_valid_type(TokenType::IDENT)) {
+        initial = parseAssign();
+    }
+
+    consume(TokenType::SEMICOLON, "Expected ';' after loop initialisation. ");
+    Expr *condition = parseExpr();
+    consume(TokenType::SEMICOLON, "Expected ';' after loop condition. ");
+
+    Statement *counter = nullptr;
+    if (check_valid_type(TokenType::IDENT)) {
+        counter = parseAssign();
+    } else {
+        delete initial;
+        delete condition;
+        throw std::runtime_error("Expected assignment for loop increment. ");
+    }
+
+    consume(TokenType::R_PAR, "Expected closing ')' for loop header. ");
+    Loop_ST *forLoop = new Loop_ST(initial, condition, counter);
+
+    while (!check_valid_type(TokenType::DONE) && !isEnd()) {
+        Statement *statement = parseStatement();
+        forLoop->LoopBody.push_back(statement);
+    }
+    consume(TokenType::DONE, "Expected 'done' after loop body. ");
+    return forLoop;
+}
+
+// fun name(a, b) { STATEMENT } ret [EXPR]
+// The closing 'ret' ends the body; a value must start on the same line.
+Statement *Parser::parseFunction() {
+    const Token &nameToken = consume(TokenType::IDENT, "Expected function name after 'fun'. ");
+    std::shared_ptr<Function> function(new Function);
+    function->name = nameToken.val;
+
+    consume(TokenType::L_PAR, "Expected '(' after function name. ");
+    if (!check_valid_type(TokenType::R_PAR)) {
+        do {
+            const Token &param = consume(TokenType::IDENT, "Expected parameter name. ");
+            function->parameters.push_back(param.val);
+        } while (match_advance(TokenType::COMMA));
+    }
+    consume(TokenType::R_PAR, "Expected ')' after parameters. ");
+
+    ++function_depth;
+    try {
+        while (!check_valid_type(TokenType::RET) && !isEnd()) {
+            function->body.push_back(parseStatement());
+        }
+        if (!check_valid_type(TokenType::RET)) {
+            failAtCurrent("Expected 'ret' to close the body of function '" + function->name + "'. ");
+        }
+        const Token &ret = next();
+        if (!isEnd() && peek().token_line == ret.token_line) {
+            function->returnValue = parseExpr();
+        }
+    } catch (...) {
+        --function_depth;
+        throw;
+    }
+    --function_depth;
+
+    return new FunDecl_ST(function);
+}
+
+// An early 'ret' inside an if/loop within a function body.
+Statement *Parser::parseReturn() {
+    if (function_depth == 0) failAtCurrent("'ret' outside of a function. ");
+    const Token &ret = next();
+
+    Expr *value = nullptr;
+    if (!isEnd() && peek().token_line == ret.token_line) {
+        value = parseExpr();
+    }
+    return new Return_ST(value);
+}
+
+Expr *Parser::parseExpr() {
     return parseLogicOr();
 }
 
-Expr* Parser::parseLogicOr() {
-    Expr* expr = parseLogicAnd();
+Expr *Parser::parseLogicOr() {
+    Expr *expr = parseLogicAnd();
 
-    while(match_advance(TokenType::OR)){
-        Expr * right = parseLogicAnd();
-        expr = new BinaryExpr(expr,right,BinaryOperationType::OR);
+    while (match_advance(TokenType::OR)) {
+        Expr *right = parseLogicAnd();
+        expr = new BinaryExpr(expr, right, BinaryOperationType::OR);
     }
     return expr;
 }
 
-Expr* Parser::parseLogicAnd() {
-    Expr* expr = parseLogicEqual();
+Expr *Parser::parseLogicAnd() {
+    Expr *expr = parseLogicEqual();
 
-    while(match_advance(TokenType::AND)){
-        Expr * right = parseLogicEqual();
-        expr = new BinaryExpr(expr,right,BinaryOperationType::AND);
+    while (match_advance(TokenType::AND)) {
+        Expr *right = parseLogicEqual();
+        expr = new BinaryExpr(expr, right, BinaryOperationType::AND);
     }
     return expr;
 }
 
-Expr* Parser::parseLogicEqual() {
-    Expr* expr = parseCompare();
+Expr *Parser::parseLogicEqual() {
+    Expr *expr = parseCompare();
 
-    while(match_advance(TokenType::EQUAL)){
-        Expr * right = parseCompare();
-        expr = new BinaryExpr(expr,right,BinaryOperationType::EQ);
+    while (true) {
+        if (match_advance(TokenType::EQUAL)) {
+            Expr *right = parseCompare();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::EQ);
+        } else if (match_advance(TokenType::NOT_EQ)) {
+            Expr *right = parseCompare();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::NOT_EQ);
+        } else {
+            return expr;
+        }
     }
-    while(match_advance(TokenType::NOT_EQ)){
-        Expr * right = parseCompare();
-        expr = new BinaryExpr(expr,right,BinaryOperationType::NOT_EQ);
-    }
-    return expr;
 }
 
-Expr* Parser::parseCompare() {
-    Expr* expr = parseTerm();
+Expr *Parser::parseCompare() {
+    Expr *expr = parseTerm();
 
-    while(true){
-        if(match_advance(TokenType::LESS)){
-            Expr * right = parseTerm();
-            expr = new BinaryExpr(expr,right,BinaryOperationType::LT);
+    while (true) {
+        if (match_advance(TokenType::LESS)) {
+            Expr *right = parseTerm();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::LT);
+        } else if (match_advance(TokenType::GREATER)) {
+            Expr *right = parseTerm();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::GT);
+        } else {
+            return expr;
         }
-
-        if(match_advance(TokenType::GREATER)){
-            Expr * right = parseTerm();
-            expr = new BinaryExpr(expr,right,BinaryOperationType::GT);
-        }
-        else break;
     }
-    return expr;
 }
 
-Expr* Parser::parseTerm()  {
-    Expr* expr = parseFactor();
+Expr *Parser::parseTerm() {
+    Expr *expr = parseFactor();
 
-    while(true){
-        if(match_advance(TokenType::PLUS)){
-            Expr * right = parseFactor();
-            expr = new BinaryExpr(expr,right,BinaryOperationType::ADD);
+    while (true) {
+        if (match_advance(TokenType::PLUS)) {
+            Expr *right = parseFactor();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::ADD);
+        } else if (match_advance(TokenType::MINUS)) {
+            Expr *right = parseFactor();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::SUB);
+        } else {
+            return expr;
         }
-        if(match_advance(TokenType::MINUS)){
-            Expr * right = parseFactor();
-            expr = new BinaryExpr(expr,right,BinaryOperationType::SUB);
-        }
-        else break;
     }
-    return expr;
 }
 
-Expr* Parser::parseFactor() {
+Expr *Parser::parseFactor() {
+    Expr *expr = parseUnary();
 
-    Expr* expr = parseUnary();
-
-    while(true){
-        if(match_advance(TokenType::MULTIPLY)){
-            Expr * right = parseUnary();
-            expr = new BinaryExpr(expr,right,BinaryOperationType::MUL);
+    while (true) {
+        if (match_advance(TokenType::MULTIPLY)) {
+            Expr *right = parseUnary();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::MUL);
+        } else if (match_advance(TokenType::DIVISION)) {
+            Expr *right = parseUnary();
+            expr = new BinaryExpr(expr, right, BinaryOperationType::DIV);
+        } else {
+            return expr;
         }
-        if(match_advance(TokenType::DIVISION)){
-            Expr * right = parseUnary();
-            expr = new BinaryExpr(expr,right,BinaryOperationType::DIV);
-        }
-        else break;
     }
-    return expr;
-
 }
 
-Expr* Parser::parseUnary() {
-
-    if(match_advance(TokenType::MINUS)){
-        Expr* right = parseUnary();
-        return new BinaryExpr(new NumExpr(0),right,BinaryOperationType::SUB);
+Expr *Parser::parseUnary() {
+    if (match_advance(TokenType::MINUS)) {
+        Expr *right = parseUnary();
+        return new BinaryExpr(new NumExpr(0), right, BinaryOperationType::SUB);
     }
+
     return parsePrimary();
 }
 
-Expr* Parser::parsePrimary() {
-    if(match_advance(TokenType::NUMBER)){
+Expr *Parser::parsePrimary() {
+    if (match_advance(TokenType::NUMBER)) {
         return new NumExpr(std::stoi(previous().val));
     }
 
-    if(match_advance(TokenType::STRING)){
+    if (match_advance(TokenType::FLOAT)) {
+        return NumExpr::makeFloat(std::stof(previous().val));
+    }
+
+    if (match_advance(TokenType::STRING)) {
         return new StringExpr(previous().val);
     }
 
-    if(match_advance(TokenType::IDENT)){
-        return new IdentExpr(previous().val);
+    if (check_valid_type(TokenType::IDENT)) {
+        if (tokens[current_token + 1].type == TokenType::L_PAR) return parseCall();
+        return new IdentExpr(next().val);
     }
 
-    if(match_advance(TokenType::NEWLN)){
+    if (match_advance(TokenType::NEWLN)) {
         return new StringExpr(previous().val);
     }
 
-    if(match_advance(TokenType::L_PAR)){
-        Expr * expr = parseExpr();
+    if (match_advance(TokenType::L_PAR)) {
+        Expr *expr = parseExpr();
         consume(TokenType::R_PAR, "Expected ')' after expression. ");
         return expr;
     }
-    throw std::runtime_error("Line " + std::to_string(peek().token_line+1) + ": Expected expression");
+    failAtCurrent("Expected expression");
 }
 
+// name(arg, arg)
+Expr *Parser::parseCall() {
+    const Token &nameToken = next();
+    std::unique_ptr<CallExpr> call(new CallExpr(nameToken.val, nameToken.token_line));
 
-
-
-
-
-
-
-
+    consume(TokenType::L_PAR, "Expected '(' after function name. ");
+    if (!check_valid_type(TokenType::R_PAR)) {
+        do {
+            call->arguments.push_back(parseExpr());
+        } while (match_advance(TokenType::COMMA));
+    }
+    consume(TokenType::R_PAR, "Expected ')' after arguments. ");
+    return call.release();
+}

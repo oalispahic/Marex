@@ -1,0 +1,9 @@
+// Run as: marex args.mx one two
+// Everything after the file name is exposed as ARGC and ARGV0, ARGV1, ...
+print("got " + ARGC + " argument(s)")
+print(newln)
+
+if (ARGC > 0)
+    print("first: " + ARGV0)
+    print(newln)
+fi

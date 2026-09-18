@@ -1,0 +1,72 @@
+{
+  "name": "marex-lang",
+  "displayName": "Marex Language",
+  "description": "Syntax highlighting, snippets and a formatter for the Marex language (.mx)",
+  "version": "0.1.0",
+  "publisher": "oalispahic",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oalispahic/Marex.git",
+    "directory": "editors/vscode"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters",
+    "Snippets"
+  ],
+  "keywords": [
+    "marex",
+    "mx",
+    "interpreter"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:marex"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "marex",
+        "aliases": [
+          "Marex",
+          "marex"
+        ],
+        "extensions": [
+          ".mx"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "marex",
+        "scopeName": "source.marex",
+        "path": "./syntaxes/marex.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "marex",
+        "path": "./snippets/marex.json"
+      }
+    ],
+    "configuration": {
+      "title": "Marex",
+      "properties": {
+        "marex.format.collapseBlankLines": {
+          "type": "boolean",
+          "default": true,
+          "description": "Collapse runs of blank lines into a single blank line when formatting."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "package": "npx @vscode/vsce package"
+  }
+}

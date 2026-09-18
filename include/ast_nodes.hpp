@@ -5,6 +5,7 @@
 #ifndef MAREX_AST_NODES_HPP
 #define MAREX_AST_NODES_HPP
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -16,10 +17,23 @@ struct Expr : Node {
     virtual ~Expr() = default;
 };
 
+struct NullExpr : Expr {
+    virtual ~NullExpr() = default;
+};
+
 struct NumExpr : Expr {
     int val;
+    float floatValue;
+    bool isFloat;
 
-    explicit NumExpr(int num_val) : val(num_val) {}
+    explicit NumExpr(int num_val) : val(num_val), floatValue(0), isFloat(false) {}
+
+    static NumExpr *makeFloat(float float_val) {
+        NumExpr *expr = new NumExpr(0);
+        expr->floatValue = float_val;
+        expr->isFloat = true;
+        return expr;
+    }
 };
 
 struct StringExpr : Expr {
@@ -32,6 +46,28 @@ struct IdentExpr : Expr {
     std::string ident_val;
 
      IdentExpr(const std::string &ident_val) : ident_val(ident_val) {}
+};
+
+struct ArrayExpr : Expr {
+    std::vector<Expr *> elements;
+};
+
+struct ArrayIndexExpr : Expr {
+    Expr *array;
+    Expr *index;
+};
+
+// A call such as 'name(arg, arg)'.
+struct CallExpr : Expr {
+    std::string name;
+    std::vector<Expr *> arguments;
+    int line;
+
+    CallExpr(const std::string &name, int line) : name(name), line(line) {}
+
+    ~CallExpr() override {
+        for (auto &arg: arguments) delete arg;
+    }
 };
 
 enum class BinaryOperationType {
@@ -60,8 +96,19 @@ struct Statement : Node {
 struct NullStmt : Statement {
     virtual ~NullStmt() = default;
 };
+
+// A bare expression used as a statement. It is evaluated for its side
+// effects (and errors) and the result is discarded.
+struct Expr_ST : Statement {
+    Expr *expression;
+
+    explicit Expr_ST(Expr *expression) : expression(expression) {}
+
+    ~Expr_ST() override { delete expression; }
+};
 struct VarDeclaration_ST : Statement {
     std::string var_name;
+    bool isArray;
     Expr *value;
 
     VarDeclaration_ST(const std::string &var, Expr *value) : var_name(var), value(value) {
@@ -90,6 +137,12 @@ struct Print_ST : Statement {
 
 };
 
+struct System_ST : Statement {
+    std::string system_statement;
+
+    explicit System_ST(const std::string &system_statement) : system_statement(system_statement) {}
+};
+
 struct Loop_ST : Statement {
     Statement *initialisation;
     Expr *condition;
@@ -108,13 +161,17 @@ struct Loop_ST : Statement {
 };
 
 struct RangeLoop_ST : Statement {
-    std::string start;
-    std::string end;
+    Expr *start;
+    Expr *end;
+    Expr *step;
     std::vector<Statement *> LoopBody;
 
-    RangeLoop_ST(std::string &st, std::string &end) : start(st), end(end) {}
+    RangeLoop_ST(Expr *st, Expr *en, Expr *stp) : start(st), end(en), step(stp) {}
 
     ~RangeLoop_ST() override {
+        delete start;
+        delete end;
+        if (step) delete step;
         for (auto &del: LoopBody) delete del;
     }
 };
@@ -131,6 +188,36 @@ struct If_ST : Statement{
         for(auto &del: thenBranch) delete del;
         for(auto &del : elseBranch) delete del;
     }
+};
+
+// Early 'ret' inside an if/loop within a function body.
+struct Return_ST : Statement {
+    Expr *value;   // nullptr for a void return
+
+    explicit Return_ST(Expr *value) : value(value) {}
+
+    ~Return_ST() override { delete value; }
+};
+
+// A function definition. It is shared between the AST and the
+// interpreter's function table so that a function defined in one REPL
+// input survives the deletion of that input's Program.
+struct Function {
+    std::string name;
+    std::vector<std::string> parameters;
+    std::vector<Statement *> body;
+    Expr *returnValue = nullptr;   // the closing 'ret'; nullptr for void
+
+    ~Function() {
+        for (auto &del: body) delete del;
+        delete returnValue;
+    }
+};
+
+struct FunDecl_ST : Statement {
+    std::shared_ptr<Function> function;
+
+    explicit FunDecl_ST(std::shared_ptr<Function> function) : function(std::move(function)) {}
 };
 
 struct Program{
