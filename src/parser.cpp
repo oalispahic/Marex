@@ -376,7 +376,7 @@ Expr *Parser::parsePrimary() {
     }
 
     if (match_advance(TokenType::FLOAT)) {
-        return new NumExpr(0, std::stof(previous().val));
+        return NumExpr::makeFloat(std::stof(previous().val));
     }
 
     if (match_advance(TokenType::STRING)) {

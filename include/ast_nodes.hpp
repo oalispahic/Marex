@@ -23,8 +23,16 @@ struct NullExpr : Expr {
 struct NumExpr : Expr {
     int val;
     float floatValue;
+    bool isFloat;
 
-    explicit NumExpr(int num_val, float float_val = 0) : val(num_val), floatValue(float_val) {}
+    explicit NumExpr(int num_val) : val(num_val), floatValue(0), isFloat(false) {}
+
+    static NumExpr *makeFloat(float float_val) {
+        NumExpr *expr = new NumExpr(0);
+        expr->floatValue = float_val;
+        expr->isFloat = true;
+        return expr;
+    }
 };
 
 struct StringExpr : Expr {

@@ -24,6 +24,7 @@ void Interpreter::run(Program *prog) {
 Value Interpreter::evalExpr(Expr *expression) {
 
     if (auto num = dynamic_cast<NumExpr *>(expression)) {
+        if (num->isFloat) return Value::makeFloat(num->floatValue);
         return Value::makeInt(num->val);
     }
 
@@ -72,14 +73,7 @@ Value Interpreter::evalExpr(Expr *expression) {
 void Interpreter::execStatement(Statement *statement) {
 
     if (auto var = dynamic_cast<VarDeclaration_ST *>(statement)) {
-        if (var->value != nullptr) {
-            Value val = evalExpr(var->value);
-            global_scope[var->var_name] = val;
-            return;
-        }
-        Value val;
-        val.type = Type::NaN;
-        global_scope[var->var_name] = val;
+        global_scope[var->var_name] = var->value ? evalExpr(var->value) : Value::makeNaN();
         return;
     }
 
@@ -91,17 +85,10 @@ void Interpreter::execStatement(Statement *statement) {
     }
 
     if (auto print = dynamic_cast<Print_ST *>(statement)) {
-        Value val = evalExpr(print->print_value);
-        if (val.type == Type::INT) {
-            std::cout << val.integer_value;
-            at_line_start = false;
-        } else if (val.type == Type::FLOAT) {
-            std::cout << val.float_value;
-            at_line_start = false;
-        } else if (val.type == Type::STRING && !val.stringValue.empty()) {
-            std::cout << val.stringValue;
-            at_line_start = val.stringValue.back() == '\n';
-        }
+        const std::string text = evalExpr(print->print_value).toString();
+        if (text.empty()) return;
+        std::cout << text;
+        at_line_start = text.back() == '\n';
         return;
     }
 
@@ -115,9 +102,7 @@ void Interpreter::execStatement(Statement *statement) {
 
 
     if (auto if_statement = dynamic_cast<If_ST *>(statement)) {
-        Value condition = evalExpr(if_statement->condition);
-
-        if (condition.integer_value != 0) {
+        if (evalExpr(if_statement->condition).truthy()) {
             for (auto body: if_statement->thenBranch) execStatement(body);
 
         } else {
@@ -130,7 +115,7 @@ void Interpreter::execStatement(Statement *statement) {
         if (loop->initialisation)
             execStatement(loop->initialisation);
 
-        while (evalExpr(loop->condition).integer_value != 0) {
+        while (evalExpr(loop->condition).truthy()) {
             for (auto s: loop->LoopBody)
                 execStatement(s);
             execStatement(loop->increment);

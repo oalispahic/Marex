@@ -10,16 +10,16 @@ enum class Type{
     INT,
     FLOAT,
     STRING,
-    BOOL,
     NaN
 };
+
+const char *typeName(Type type);
 
 struct Value{
     Type type = Type::NaN;
     int integer_value = 0;
     float float_value = 0.0f;
     std::string stringValue{};
-    bool boolVal;
 
     static Value makeInt(int v);
 
@@ -27,23 +27,33 @@ struct Value{
 
     static Value makeString(const std::string &s);
 
-    static Value makeBool(int b);
-
     static Value makeNaN();
 
-    Value add (const Value& other);
-    Value sub (const Value& other);
-    Value mul (const Value& other);
-    Value div (const Value& other);
+    bool isNumeric() const { return type == Type::INT || type == Type::FLOAT; }
 
-    Value equals (const Value& other);
-    Value notEquals (const Value& other);
+    // Numeric value as float, for mixed int/float arithmetic.
+    float asFloat() const;
 
-    Value logicAnd (const Value& other);
-    Value logicOr (const Value& other);
+    // Truthiness used by conditions and logical operators:
+    // non-zero numbers and non-empty strings are true, NaN is false.
+    bool truthy() const;
 
-    Value lessThan (const Value& other);
-    Value greaterThan (const Value& other);
+    // Human readable form used by print and string concatenation.
+    std::string toString() const;
+
+    Value add (const Value& other) const;
+    Value sub (const Value& other) const;
+    Value mul (const Value& other) const;
+    Value div (const Value& other) const;
+
+    Value equals (const Value& other) const;
+    Value notEquals (const Value& other) const;
+
+    Value logicAnd (const Value& other) const;
+    Value logicOr (const Value& other) const;
+
+    Value lessThan (const Value& other) const;
+    Value greaterThan (const Value& other) const;
 };
 
 #endif //MAREX_VALUES_TYPES_HPP
